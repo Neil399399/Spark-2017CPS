@@ -25,6 +25,7 @@ def testparsePoint(line):
     return LabeledPoint(values[0],values[1:])
 
 def TimeDomain(line):
+
     try:
        values = [float(x) for x in line.split("\t")]
     except:

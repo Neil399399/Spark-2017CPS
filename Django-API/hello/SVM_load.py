@@ -88,6 +88,7 @@ sc = SparkContext(conf=conf)
 print("load testdata")
 test = sc.textFile("file:/home/spark/Downloads/sparkSvm/CPSdata20171120.csv")
 testData = test.map(TimeDomain)
+print(testData.collect())
 #------------------------------------------------------------#
 print("load model")
 Model = SVMModel.load(sc,"file:///home/spark/Desktop/TimeDomainModel")
