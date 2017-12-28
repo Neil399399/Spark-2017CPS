@@ -114,22 +114,39 @@ def parser(a,label):
 
 #select all the file in folder and save in the list.
 filenames=[]
-for root,dirs,files in os.walk("."):
+for root,dirs,files in os.walk("/home/spark/Downloads/dataset/500rpm-normal/"):
     for filename in files:
         filenames.append(filename)
-
-#open
-with open ("data/500rpm-normal/20171125-053000.txt","r") as file:
-    Data = csv.reader(file,delimiter="\t")
-    a = list(Data)
-
+print(len(filenames))
+print(filenames[15005])
 #merge
-F= open('data/500rpm-normal/merge.txt', 'a')
-w = csv.writer(F)
+Train= open('/home/spark/Downloads/dataset/train.txt', 'a')
+Test= open('/home/spark/Downloads/dataset/train.txt', 'a')
+wtrain = csv.writer(Train)
+wtest = csv.writer(Test)
 
-normal=parser(a,1)
+#for training
+#for i in range (5,15005):
+   #open
+#    with open ("/home/spark/Downloads/dataset/500rpm-normal/"+filename[i],"r") as file:
+#        Data = csv.reader(file,delimiter="\t")
+#        a = list(Data)
+    
+#    normal=parser(a,1)
+#    wtrain.writerows(normal)
 
-w.writerows(normal)
-F.close()
+Train.close()
+
+#for testing
+#for i in range (15006,20006):
+   #open
+#    with open ("/home/spark/Downloads/dataset/500rpm-normal/"+filename[i],"r") as file:
+#        Data = csv.reader(file,delimiter="\t")
+#        a = list(Data)
+    
+#    normal=parser(a,1)
+#    wtest.writerows(normal)
+
+Test.close()
 
 
