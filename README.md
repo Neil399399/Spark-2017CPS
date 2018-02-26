@@ -1,8 +1,8 @@
 # Spark-2017CPS
-Analyze machine logs and call the  API to prediction machine status with spark cluster.
+Analyze machine logs and call the  API to prediction machine status with spark cluster.
 
 ## Introduction
-We're Spark clusters had built with one master and two node.      
+We're Spark clusters had built with one master and two node.      
 Spark-master : 140.124.183.14     
 Spark-node 1 : 10.14.24.102     
 Spark-node 2 : 10.14.24.103
@@ -44,12 +44,12 @@ Hadoop : 2.7.4
 
 
 ### Precautions
-1. We had already built the spark-cluster in server, if you want use or change something , please tell the IT.
+1. We had already built the spark-cluster in server, if you want use or change something , please tell the IT.
 
 2. Before you started, please read a [CPS_test_chip](http://140.124.183.8/104598027/spark_web/tree/master/cps_test_chip) first. Here has some note you to know.
 
 
-## Establish Spark Cluster
+## Establish Spark Cluster
 If you want to have one spark cluster in local, please follow the step to setting your enviroment.
 
 ### Download and Install 
@@ -69,7 +69,7 @@ Before we started , please download [Spark](https://spark.apache.org/downloads.h
 Attention, when you download Spark , you should choose the versions which supported your hadoop versions. 
 
 ### Install Spark     
-After downloaded, unzip in `/usr/local/` and rename to `spark`.
+After downloaded, unzip in `/usr/local/` and rename to `spark`.
 
 In to spark folder and move `pyspark` to `/usr/local/lib/python3.x/dist-packages/`, `x` is your Python version.
 >sudo cp -r python/pyspark /usr/local/lib/python3.x/dist-packages/
@@ -84,7 +84,7 @@ export SPARK_HOME=/usr/local/spark
 #PATH
 export PATH=$PATH:$SPARK_HOME/bin
 ```
-after edited, save and resource `bashrc`.
+after edited, save and resource `bashrc`.
 >source ~ /.bashrc      
 
 and now you can go to terminal to run the `spark-shell`.
@@ -104,7 +104,7 @@ edit:
 log4j.rootCategory = WARN, console
 ```
 ### Install Hadoop
-After downloaded, unzip in `/usr/local/` and rename to `hadoop`.
+After downloaded, unzip in `/usr/local/` and rename to `hadoop`.
 #### Setting hostname and IP
 > sudo vim /etc/hostname
 ```zsh
