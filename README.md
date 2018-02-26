@@ -128,7 +128,7 @@ Get a master ssh key.
 Give master key to slaves.
 > cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 
->scp -r ~/.ssh slave1:~/
+> scp -r ~/.ssh slave1: ~/
 
 After send the key, you can run `ssh slave1` and connect slave1.
 
