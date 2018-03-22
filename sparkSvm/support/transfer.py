@@ -115,9 +115,9 @@ def parserOneFile(a,label):
 print("parser start running!!")
 # folder.
 # NormalDir = 'C:/Users/User/Downloads/500rpm_one_bolt(new)/500rpm_one_bolt(new)/Data/'
-# NormalDir = 'C:/Users/User/Downloads/500rpm_normal(new)/500rpm_normal(new)/Data/'
+NormalDir = 'C:/Users/User/Downloads/500rpm_normal(new)/500rpm_normal(new)/Data/'
 # unNormalDir ='C:/Users/User/Downloads/500rpm_rag(new)/Data/'
-unNormalDir ='C:/Users/User/Downloads/500rpm_two_bolts(new)/500rpm_two_bolts(new)/Data/'
+# unNormalDir ='C:/Users/User/Downloads/500rpm_two_bolts(new)/500rpm_two_bolts(new)/Data/'
 
 # TrainDir = 'D:/CPS/oneBlot-rag/oneBlot-ragTrain.txt'
 # TestDir = 'D:/CPS/oneBlot-rag/oneBlot-ragTest.txt'

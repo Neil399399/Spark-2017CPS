@@ -3,6 +3,7 @@
 # Author: NEIL
 
 FROM ubuntu
+MAINTAINER NEIL
 USER root
 
 # Neil Huang <neil399399@gmail.com>
@@ -13,21 +14,21 @@ RUN apt-get install vim -y
 RUN apt-get install python -y
 RUN apt-get install ssh -y
 RUN apt-get install rsync -y
+RUN apt-get install -y bzip2
+RUN apt-get install net-tools
+RUN apt-get install python-pip -y
 # passwordless ssh
-RUN ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key -y
-RUN ssh-keygen -q -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key -y
-RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa
-RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+RUN ssh-keygen -t dsa -P '' -f /root/.ssh/id_dsa
+RUN cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
 
 # java
 RUN apt-get install default-jre -y
-ENV JAVA_HOME /usr/java/default
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH $PATH:$JAVA_HOME/bin
 
 # hadoop
 RUN wget http://apache.stu.edu.tw/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz
-RUN tar zxf hadoop-2.7.5.tar.gz
-RUN mv hadoop-2.7.5 /usr/local/hadoop
+RUN tar -zxvf hadoop-2.7.5.tar.gz && mv hadoop-2.7.5 /usr/local/hadoop
 ENV HADOOP_HOME /usr/local/hadoop
 ENV HADOOP_COMMON_HOME /usr/local/hadoop
 ENV HADOOP_HDFS_HOME /usr/local/hadoop
@@ -42,60 +43,34 @@ ENV PATH $PATH:$HADOOP_HOME/sbin
 
 ENV HADOOP_CONF_DIR /usr/local/hadoop/etc/hadoop
 ENV YARN_CONF_DIR $HADOOP_PREFIX/etc/hadoop
-RUN sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/java/default\nexport HADOOP_PREFIX=/usr/local/hadoop\nexport HADOOP_HOME=/usr/local/hadoop\n:' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-# RUN sed -i '/^export HADOOP_CONF_DIR/ s:.*:export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop/:' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+RUN sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64\nexport HADOOP_HOME=/usr/local/hadoop\n:' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+RUN sed -i '/^export HADOOP_CONF_DIR/ s:.*:export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop/:' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 
-# #RUN . $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
-# RUN mkdir $HADOOP_PREFIX/input
-# RUN cp $HADOOP_PREFIX/etc/hadoop/*.xml $HADOOP_PREFIX/input
-
-# # pseudo distributed
-# ADD core-site.xml.template $HADOOP_PREFIX/etc/hadoop/core-site.xml.template
-# RUN sed s/HOSTNAME/localhost/ /usr/local/hadoop/etc/hadoop/core-site.xml.template > /usr/local/hadoop/etc/hadoop/core-site.xml
-# ADD hdfs-site.xml $HADOOP_PREFIX/etc/hadoop/hdfs-site.xml
-# ADD mapred-site.xml $HADOOP_PREFIX/etc/hadoop/mapred-site.xml
-# ADD yarn-site.xml $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
-# RUN $HADOOP_PREFIX/bin/hdfs namenode -format
-
-# fixing the libhadoop.so like a boss
-RUN rm -rf /usr/local/hadoop/lib/native
-RUN mv /tmp/native /usr/local/hadoop/lib
-ADD ssh_config /root/.ssh/config
-RUN chmod 600 /root/.ssh/config
-RUN chown root:root /root/.ssh/config
-
-
-ADD bootstrap.sh /etc/bootstrap.sh
-RUN chown root:root /etc/bootstrap.sh
-RUN chmod 700 /etc/bootstrap.sh
-ENV BOOTSTRAP /etc/bootstrap.sh
-# workingaround docker.io build error
-RUN ls -la /usr/local/hadoop/etc/hadoop/*-env.sh
-RUN chmod +x /usr/local/hadoop/etc/hadoop/*-env.sh
-RUN ls -la /usr/local/hadoop/etc/hadoop/*-env.sh
-
-# fix the 254 error code
-RUN sed  -i "/^[^#]*UsePAM/ s/.*/#&/"  /etc/ssh/sshd_config
-RUN echo "UsePAM no" >> /etc/ssh/sshd_config
-RUN echo "Port 2122" >> /etc/ssh/sshd_config
-RUN service sshd start && $HADOOP_HOME/etc/hadoop/hadoop-env.sh && $HADOOP_HOME/sbin/start-dfs.sh && $HADOOP_HOME/bin/hdfs dfs -mkdir -p /user/root
-RUN service sshd start && $HADOOP_HOME/etc/hadoop/hadoop-env.sh && $HADOOP_HOME/sbin/start-dfs.sh && $HADOOP_HOME/bin/hdfs dfs -put $HADOOP_HOME/etc/hadoop/ input
+# HDFS folder.
+RUN mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode
+RUN mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode
 
 
 
-# RUN wget -s http://apache.stu.edu.tw/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz |  tar -xz -C /usr/local/
-# RUN cd /usr/local && ln -s spark-2.3.0-bin-hadoop2.7 spark
-# ENV SPARK_HOME /usr/local/spark
-# RUN mkdir $SPARK_HOME/yarn-remote-client
-# ADD yarn-remote-client $SPARK_HOME/yarn-remote-client
-# RUN $BOOTSTRAP && $HADOOP_PREFIX/bin/hadoop dfsadmin -safemode leave && $HADOOP_PREFIX/bin/hdfs dfs -put $SPARK_HOME-1.5.1-bin-hadoop2.6/lib /spark
-# ENV YARN_CONF_DIR $HADOOP_PREFIX/etc/hadoop
-# ENV PATH $PATH:$SPARK_HOME/bin:$HADOOP_PREFIX/bin
+# Spark 
+RUN wget http://apache.stu.edu.tw/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
+RUN tar -zxvf spark-2.3.0-bin-hadoop2.7.tgz && mv spark-2.3.0-bin-hadoop2.7 /usr/local/spark
+ENV SPARK_HOME /usr/local/spark
+RUN cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
+RUN sed -i '/^export SPARK_MASTER_IP/ s:.*:export SPARK_MASTER_IP=master\nexport SPARK_WORKER_CORES=1\nexport SPARK_WORKER_MEMORY=1g\nexport SPARK_EXECUTOR_INSTANCES=4:' $SPARK_HOME/conf/spark-env.sh
+ENV PATH $PATH:$SPARK_HOME/bin
+ENV PATH $PATH:$SPARK_HOME/sbin
 
-# # update boot script
-# COPY bootstrap.sh /etc/bootstrap.sh
-# RUN chown root.root /etc/bootstrap.sh
-# RUN chmod 700 /etc/bootstrap.sh
+# Anaconda2-2.5.0
+RUN wget https://repo.continuum.io/archive/Anaconda3-5.0.0.1-Linux-x86_64.sh && bash Anaconda3-5.0.0.1-Linux-x86_64.sh -b
+ENV PATH ~/anaconda3/bin:${PATH}
+ENV ANACONDA_PATH ~/anaconda3
+ENV PYSPARK_DRIVER_PYTHON $ANACONDA_PATH/bin/ipython
+ENV PYSPARK_PYTHON $ANACONDA_PATH/bin/ipython
+
+# Ipynotebook
+RUN mkdir -p ~/pythonwork/ipynotebook
+RUN echo "root:123456" | chpasswd
 
 
 # spark ports
@@ -105,8 +80,8 @@ EXPOSE 50010 50020 50070 50075 50090
 # Mapred ports
 EXPOSE 19888
 #Yarn ports
-EXPOSE 8030 8031 8032 8033 8040 8042 8088
+EXPOSE 8030 8031 8032 8033 8040 8042 8088 8888
 #Other ports
-EXPOSE 49707 2122  
-ENTRYPOINT ["/etc/bootstrap.sh"]
+EXPOSE 49707 2122 22
+CMD ["executable","param1","param2"]
 
