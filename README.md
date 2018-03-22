@@ -84,6 +84,7 @@ cd etc/ssh
 # If finish changed, go run:
 service ssh restart
 ```
+  ![ssh setting](https://i.imgur.com/FThJ9LH.png)
 #### Setp4
 Started setting spark environments(both master and slaves):
 ```zsh
@@ -91,7 +92,6 @@ Started setting spark environments(both master and slaves):
 cd usr/local/spark/conf
 vim spark-env.sh
 ```
-  ![ssh setting](https://i.imgur.com/FThJ9LH.png)
 add this setting:
 >export SPARK_MASTER_IP={your master IP}  
 export SPARK_MASTER_CORES=1     
