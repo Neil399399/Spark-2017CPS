@@ -3,7 +3,6 @@
 # Author: NEIL
 
 FROM ubuntu
-MAINTAINER NEIL
 USER root
 
 # Neil Huang <neil399399@gmail.com>
@@ -16,7 +15,7 @@ RUN apt-get install ssh -y
 RUN apt-get install rsync -y
 RUN apt-get install -y bzip2
 RUN apt-get install net-tools
-RUN apt-get install python-pip -y
+# RUN apt-get install python-pip -y
 # passwordless ssh
 RUN ssh-keygen -t dsa -P '' -f /root/.ssh/id_dsa
 RUN cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
@@ -62,11 +61,11 @@ ENV PATH $PATH:$SPARK_HOME/bin
 ENV PATH $PATH:$SPARK_HOME/sbin
 
 # Anaconda2-2.5.0
-RUN wget https://repo.continuum.io/archive/Anaconda3-5.0.0.1-Linux-x86_64.sh && bash Anaconda3-5.0.0.1-Linux-x86_64.sh -b
-ENV PATH ~/anaconda3/bin:${PATH}
-ENV ANACONDA_PATH ~/anaconda3
-ENV PYSPARK_DRIVER_PYTHON $ANACONDA_PATH/bin/ipython
-ENV PYSPARK_PYTHON $ANACONDA_PATH/bin/ipython
+# RUN wget https://repo.continuum.io/archive/Anaconda3-5.0.0.1-Linux-x86_64.sh && bash Anaconda3-5.0.0.1-Linux-x86_64.sh -b
+# ENV PATH $PATH:~/anaconda3/bin
+# ENV ANACONDA_PATH ~/anaconda3
+# ENV PYSPARK_DRIVER_PYTHON $ANACONDA_PATH/bin/ipython
+# ENV PYSPARK_PYTHON $ANACONDA_PATH/bin/python
 
 # Ipynotebook
 RUN mkdir -p ~/pythonwork/ipynotebook
@@ -74,9 +73,9 @@ RUN echo "root:123456" | chpasswd
 
 
 # spark ports
-EXPOSE 4040
+EXPOSE 4040 7077 8080 8081
 # Hdfs ports
-EXPOSE 50010 50020 50070 50075 50090
+EXPOSE 50010 50020 50070 50075 50090 8025 8030 8050 54311 9000
 # Mapred ports
 EXPOSE 19888
 #Yarn ports
