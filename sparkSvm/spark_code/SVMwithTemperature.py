@@ -65,33 +65,33 @@ def TimeDomain(line):
     newValue=[values[0],Max,Min,RMS,CF,SK,K,values[4001],values[4002]]
     return LabeledPoint(newValue[0],newValue[1:])
 
-def frequencyDomain(line):
-    try:
+def FrequencyDomain(line):
+     try:
        values = [float(x) for x in line.split("\t")]
-    except:
+     except:
        values = [float(x) for x in line.split(",")]
     #change data used fft and calculate distance ----- root(a**2+b**2)
-    newValue = [values[0]]
-    complex = np.fft.fft(values[1:4000])
+     newValue = [values[0]]
+     complex = np.fft.fft(values[1:1000])
 
-    for i in range(0,len(complex)):
+     for i in range(0,len(complex)):
         distanceOfComplex = (complex[i].real**2+complex[i].imag**2)**0.5
         newValue.append(distanceOfComplex)
-    newValue.append(values[4001])
-    newValue.append(values[4002])
-    return LabeledPoint(newValue[0],newValue[1:])
+     newValue.append(values[1001])
+     newValue.append(values[1002])
+     return LabeledPoint(newValue[0],newValue[1:])
 
 
 
 # #spark code
-#------------------------------------------------------------#
+#------------------------------------------------------------#-
 SparkContextHandler._master_ip = "10.14.24.101"
 sc = SparkContextHandler.get_spark_sc()
 #------------------------------------------------------------#
 #conf = SparkConf().setAppName('test').setMaster("local")
 #sc = SparkContext(conf=conf)
 #----------------------------#
-method =frequencyDomain
+method = FrequencyDomain
 Iterations =100
 stepSize =1
 reqParam = 0.01
@@ -102,7 +102,7 @@ tempRecall = 0
 #----------------------------#
 mylog = []
 #parsedata
-data = sc.textFile("file:/home/spark/Downloads/dataset/train4000.txt")
+data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/normal_abnormal/Train_1sec.txt")
 startTime = time()
 
 #randomdata = data.randomSplit([0.8,0.2])
@@ -118,7 +118,7 @@ runTime = time()-startTime
 for x in range(0,5):
     print("start testing!!" + str(x))
     #test = sc.textFile("file:/home/spark/Downloads/sparkSvm/newdata1125/test(" + str(x + 1) + ").txt")
-    test = sc.textFile("file:/home/spark/Downloads/dataset/test4000.txt")
+    test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/normal_abnormal/Test_1sec.txt")
     testData = test.map(method)
     labelsAndPreds = testData.map(lambda p: (p.label,model.predict(p.features)))
     #In python3 ,lambda(x,y):x+y => lambda x_y:x_y[0] + x_y[1]
@@ -157,6 +157,6 @@ print("Train setting:\n"
 #sc.parallelize(mylog).saveAsTextFile("/user/spark/eventLog/")
 
 #Save and load model
-#model.save(sc,"hdfs:///home/spark/Desktop/TimeDomain(2-Temperature_4000)Model")
+model.save(sc,"hdfs:///home/spark/Desktop/FNA_1SecModel")
 #sameModel = SVMModel.load(sc,"file:///home/spark/Desktop/model")
 
