@@ -52,95 +52,172 @@ Hadoop : 2.7.4
 ## Establish Spark Cluster
 If you want to have one spark cluster in local, please follow the step to setting your enviroment.
 
-### Download and Install 
-#### Install Package
-Run update for your OS first.
-> sudo apt-get update
-
-> sudo apt-get upgrade
-
-Install the packages.
-> sudo apt-get install apache2 apache2-dev libapache2-mod-wsgi-py3
-
->sudo pip3 install django pysolr numppy py4j  jsonpickle django-cors-headers
-   
-Before we started , please download [Spark](https://spark.apache.org/downloads.html) and [Hadoop](http://hadoop.apache.org/#Download+Hadoop) first.          
-
-Attention, when you download Spark , you should choose the versions which supported your hadoop versions. 
-
-### Install Spark     
-After downloaded, unzip in `/usr/local/` and rename to `spark`.
-
-In to spark folder and move `pyspark` to `/usr/local/lib/python3.x/dist-packages/`, `x` is your Python version.
->sudo cp -r python/pyspark /usr/local/lib/python3.x/dist-packages/
-
-Next open your terminal and open `bashrc` :
-> sudo vim gedit ~/.bashrc      
-
-import Spark variables :
-``` zsh
-#SPARK_HOME
-export SPARK_HOME=/usr/local/spark
-#PATH
-export PATH=$PATH:$SPARK_HOME/bin
-```
-after edited, save and resource `bashrc`.
->source ~ /.bashrc      
-
-and now you can go to terminal to run the `spark-shell`.
-
-#### Setting Spark-shell
-First, open your terminal and go to your spark folder.
-> cd /usr/local/spark/conf
-
-and copy the `log4j.properties.template` to `log4j.properties`.
-> cp log4j.properties.template log4j.properties
-
-edit:
-> sudo gedit log4j.properties
+### Download and Install
+Please downloads or clone the project in local, and install [Docker](https://docs.docker.com/install/) first.
+#### Step1
+After complete install ans start docker, please open the project and run the command to build the docker image.
 ```zsh
-# Change INFO to WARN.
-## Set everything to be logged to console.
-log4j.rootCategory = WARN, console
+docker build -t spark/hadoop .
 ```
-### Install Hadoop
-After downloaded, unzip in `/usr/local/` and rename to `hadoop`.
-#### Setting hostname and IP
-> sudo vim /etc/hostname
+#### Step2
+After build the docker image, please run the command to create the docker containers(one master and one slave or more).
 ```zsh
-master
+#for master
+docker run -it --name spark-master -p 8088:8088 -p 50070:50070 -p 50010:50010 -p 4040:4040 -p 8042:8042 -p 8888:8888 spark/hadoop:v10 bash
 ```
-Remember, different node should have different hostname.
-
-Setting hosts IP
-> sudo vim /etc/hosts
 ```zsh
-(your master IP) master
-(your node IP) slave1
+#for slaves
+docker run -it --name spark-slave1 --link spark-master spark/hadoop:v10 bash
+```
+#### Step3
+After finished create container, we should set the hosts to each container. Attach the container and start setting.     
+```zsh
+# Set hosts
+cd ~/etc && vim hosts # go set the docker ID and IP address to each containers.
+```
+next we need to open the `PermitRootLogin` to access the ssh can connect with the root authority.
+```zsh
+# open PermitRootLogin
+cd etc/ssh
+ vim sshd_config  # PermitRootLogin => yes.
 ...
+# If finish changed, go run:
+service ssh restart
 ```
-#### Setting SSH Connection
-> sudo apt-get install ssh
+  ![ssh setting](https://i.imgur.com/FThJ9LH.png)
+#### Setp4
+Started setting spark environments(both master and slaves):
+```zsh
+# Setting spark-env.sh.
+cd usr/local/spark/conf
+vim spark-env.sh
+```
+add this setting:
+>export SPARK_MASTER_IP={your master IP}  
+export SPARK_MASTER_CORES=1     
+export SPARK_WORKER_MEMORY=512m     
+export SPARK_EXECUTOR_INSTANCES=4   
 
-Get a master ssh key.
-> ssh-keygen -t rsa -P ""
+and here add your slaves(only master).
 
-Give master key to slaves.
-> cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+```zsh
+# Setting slaves file.
+cd usr/local/spark/conf
+cp slaves.template slaves  #copy and rename.
+vim slaves
+```
+#### Setp5
+Started setting hadoop environments(both master and slaves):    
+core-site.xml
+```zsh
+# Setting core-site.xml
+cd usr/local/hadoop/etc/hadoop
+vim core-site.xml
+```
+add this setting :
+```zsh
+<property>
+    <name>fs.default.name</name>
+    <value>hdfs://{your master ID or name}:9000</value></property>
+</property>
+```
+yarn-site.xml
+```zsh
+# Setting yarn-site.xml
+cd usr/local/hadoop/etc/hadoop
+vim yarn-site.xml
+```
+add this setting :
+```zsh
+<property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+        </property>
+<property>
+        <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+        <value>org.apache.hadoop.mapred/ShuffleHandler</value>
+</property>
+<property>
+        <name>yarn.resourcemanager.resource-tracker.address</name>
+        <value>{your master ID or name}:8025</value>
+</property>
+<property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>{your master ID or name}:8030</value>
+</property>
+<property>
+        <name>yarn.resourcemanager.address</name>
+        <value>{your master ID or name}:8050</value>
+</property>
+```
+mapred-site.xml
+```zsh
+# Setting mapred-site.xml
+cd usr/local/hadoop/etc/hadoop
+cp mapred-site.xml.templete mapred-site.xml
+vim mapred-site.xml
+```
+add this setting :
+```zsh
+<property>
+        <name>mapred.job.tracker</name>
+        <value>{your master ID or name}:54311</value>
+</property>
+```
+hdfs-site.xml
+```zsh
+# Setting hdfs-site.xml
+cd usr/local/hadoop/etc/hadoop
+vim hdfs-site.xml
+```
+add this setting(for master) :
+```
+<property>
+        <name>dfs.replication</name>
+        <value>{your slaves amount }</value>
+</property>
+<property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:/usr/local/hadoop/hadoop_data/hdfs/datanode</value>
+</property>
+```
+add this setting(for slaves) :
+```
+<property>
+        <name>dfs.replication</name>
+        <value>{your slaves amount }</value>
+</property>
+<property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:/usr/local/hadoop/hadoop_data/hdfs/namenode</value>
+</property>
+```
+<!-- Slaves
+```zsh
+cd usr/local/hadoop/etc/hadoop
+vim slaves
+``` -->
+#### Step5 
+Create hdfs folder and format(both master and slaves).
+```zsh
+# For master
+cd usr/local/hadoop/hadoop_data/hdfs
+rm -r datanode
 
-> scp -r ~/.ssh slave1: ~/
+# For slaves
+cd usr/local/hadoop/hadoop_data/hdfs
+rm -r namenode
+```
+After setting, go to master container and format hdfs folder.
+```zsh
+hadoop namenode -format
+```
+#### Step6
+Run Spark and test.
+```zsh
+pyspark --master spark://172.17.0.2:7077 --num-executors 1 --total-executor-cores=1 --executor-memory 512m
+```
 
-After send the key, you can run `ssh slave1` and connect slave1.
-
-#### Install Java 
-We need to install java in master and slave.
-> sudo apt-get install openjdk-7-jdk  (or other version)        
-
-#### Install Hadoop 
-
-Follow this website step to setting.
-
-1. [Install Hadoop on Ubuntu](https://jerrynest.io/install-hadoop-on-ubuntu/)
 
 ## Django
 Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design. Built by experienced developers, it takes care of much of the hassle of Web development, so you can focus on writing your app without needing to reinvent the wheel. It’s free and open source.

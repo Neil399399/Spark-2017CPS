@@ -1,29 +1,8 @@
 import os
 import csv
 from time import time
-# with open ("data/500rpm-normal/20171125-053000.txt","r") as csvfile:
-    # Data= [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter="\t")]
-    # # for i in range(0,len(Data)):
-    # #     Data[i].insert(0,1)
-    # print(len(Data))
 
-
-
-# with open ("Abnormal_2000RPM_1000.txt","r") as csvfile:
-#     WData = [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter="\t")]
-#     for i in range(0,len(WData)):
-#         WData[i].insert(0,0)
-#     print(len(WData))
-
-
-
-# with open ("merge.txt","r") as csvfile:
-#     a = [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter=",")]
-    
-#     print(len(a))
-#     print(len(a[0]))
-
-
+# parser for 1 sec 1000.
 def parser(a,label):
     temp1_outdoor_temperature =0.00
     temp2_outdoor_temperature =0.00
@@ -107,7 +86,7 @@ def parser(a,label):
     normal=[vibration1,vibration2,vibration3,vibration4]
     return normal
 
-
+# parser for 1 sec 4000.
 def parserOneFile(a,label):
     temp1_outdoor_temperature =0.00
     temp1_indoor_temperature =0.00
@@ -135,21 +114,27 @@ def parserOneFile(a,label):
 
 print("parser start running!!")
 # folder.
-NormalDir = "/home/spark/Documents/neil-git/dataset/500rpm-normal/"
-unNormalDir = "/home/spark/Documents/neil-git/dataset/newDataWithTwoBolt/"
-TrainDir = '/home/spark/Documents/neil-git/dataset/data/twoBoltTraintemp.txt'
-TestDir = '/home/spark/Documents/neil-git/dataset/data/twoBoltTesttemp.txt'
+# NormalDir = 'C:/Users/User/Downloads/500rpm_one_bolt(new)/500rpm_one_bolt(new)/Data/'
+NormalDir = 'C:/Users/User/Downloads/500rpm_normal(new)/500rpm_normal(new)/Data/'
+# unNormalDir ='C:/Users/User/Downloads/500rpm_rag(new)/Data/'
+# unNormalDir ='C:/Users/User/Downloads/500rpm_two_bolts(new)/500rpm_two_bolts(new)/Data/'
+
+# TrainDir = 'D:/CPS/oneBlot-rag/oneBlot-ragTrain.txt'
+# TestDir = 'D:/CPS/oneBlot-rag/oneBlot-ragTest.txt'
+TrainDir = 'D:/CPS/abnormal/Train-1sec.txt'
+TestDir = 'D:/CPS/abnormal/Test-1sec.txt'
+
 startTime = time()
 
 # select all the file in folder and save in the list.
 # Normal dataset.
-normalFilenames=[]
-for root,dirs,files in os.walk(NormalDir):
-    for filename in files:
-        normalFilenames.append(filename)
+# normalFilenames=[]
+# for root,dirs,files in os.walk(NormalDir):
+    # for filename in files:
+    #     normalFilenames.append(filename)
 
-normalFileAmounts = len(normalFilenames)
-print("File amounts in NormalDir:",normalFileAmounts)
+# normalFileAmounts = len(normalFilenames)
+# print("File amounts in NormalDir:",normalFileAmounts)
 
 # unNormal dataset.
 unNormalFilenames=[]
@@ -168,47 +153,55 @@ wtrain = csv.writer(Train)
 wtest = csv.writer(Test)
 
 #for training(Normal)
-for i in range (0,int(normalFileAmounts*3/4)):
-   #open
-    with open (NormalDir+normalFilenames[i],"r") as file:
-        Data = csv.reader(file,delimiter="\t")
-        a = list(Data)
+# for i in range (0,int(normalFileAmounts*3/4)):
+#     print("start make train data ...")
+#     print("file number:",i)
+#    #open
+#     with open (NormalDir+normalFilenames[i],"r") as file:
+#         Data = csv.reader(file,delimiter="\t")
+#         a = list(Data)
     
-    normal=parserOneFile(a,1)
-    wtrain.writerows(normal)
-
-
-#for testing(Normal)
-for i in range (int(normalFileAmounts*3/4),normalFileAmounts):
-   #open
-    with open (NormalDir+normalFilenames[i],"r") as file:
-        Data = csv.reader(file,delimiter="\t")
-        a = list(Data)
-    
-    normal=parserOneFile(a,1)
-    wtest.writerows(normal)
-
+#     normal=parser(a,1)
+#     wtrain.writerows(normal)
 
 #for training(unNormal)
 for i in range (0,int(unNormalFileAmounts*3/4)):
+    print("start make train data(unNormal) ...")
+    print("file number:",i)
    #open
     with open (unNormalDir+unNormalFilenames[i],"r") as file:
         Data = csv.reader(file,delimiter="\t")
         a = list(Data)
     
-    unNormal=parserOneFile(a,0)
+    unNormal=parser(a,0)
     wtrain.writerows(unNormal)
 
 Train.close()
 
+# #for testing(Normal)
+# for i in range (int(normalFileAmounts*3/4),normalFileAmounts):
+#     print("start make test data ...")
+#     print("file number:",i)
+#    #open
+#     with open (NormalDir+normalFilenames[i],"r") as file:
+#         Data = csv.reader(file,delimiter="\t")
+#         a = list(Data)
+
+    
+#     normal=parser(a,1)
+#     wtest.writerows(normal)
+
+
 #for testing(unNormal)
 for i in range (int(unNormalFileAmounts*3/4),unNormalFileAmounts):
+    print("start make test data(unNormal) ...")
+    print("file number:",i)
    #open
     with open (unNormalDir+unNormalFilenames[i],"r") as file:
         Data = csv.reader(file,delimiter="\t")
         a = list(Data)
     
-    unNormal=parserOneFile(a,0)
+    unNormal=parser(a,0)
     wtest.writerows(unNormal)
 
 Test.close()
