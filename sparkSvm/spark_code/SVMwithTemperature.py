@@ -9,20 +9,15 @@ from pyspark import SparkContext, SparkConf
 from pyspark.mllib.classification import SVMWithSGD
 from pyspark.mllib.classification import SVMModel
 from pyspark.mllib.regression import LabeledPoint
+from pyspark.mllib.classification import LogisticRegressionWithLBFGS
 
-#setting OS environment
+# Setting OS environment
 os.environ["PYSPARK_PYTHON"] = "python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "python3"
 logger = logging.getLogger("pyspark")
+SparkContextHandler._master_ip = "10.14.24.101"
+sc = SparkContextHandler.get_spark_sc()
 
-#parse the data
-def parsePoint(line):
-    values = [float(x) for x in line.split("\t")]
-    return LabeledPoint(values[0],values[1:])
-
-def testparsePoint(line):
-    values = [float(x) for x in line.split(",")]
-    return LabeledPoint(values[0],values[1:])
 
 def TimeDomain(line):
 
@@ -81,82 +76,68 @@ def FrequencyDomain(line):
      newValue.append(values[828])
      return LabeledPoint(newValue[0],newValue[1:])
 
+def Train_Model(trainingRDD, method, parameter_Iterations, parameter_stepSize, parameter_reqParam):
+    # model load in.
+    if method == 'Logistic':
+        Logistic_Model = LogisticRegressionWithLBFGS.train(trainingRDD, iterations=parameter_Iterations, regParam=parameter_reqParam)
+        return Logistic_Model
+    else if method == 'SVM':
+        SVM_Model = SVMWithSGD.train(trainingRDD,iterations=parameter_Iterations,step=parameter_stepSize,regParam=parameter_reqParam)
+        return SVM_Model
+    else:
+        return "No this method."
+
+def Test_Model(testingRDD, Model):
+    temptrainErr = 0
+    tempacc = 0
+    tempPrecision = 0
+    tempRecall = 0
+
+    for x in range(0,5):
+        print("start testing!!" + str(x))
+        labelsAndPreds = testingRDD.map(lambda p: (p.label,Model.predict(p.features)))
+        trainErr = labelsAndPreds.filter(lambda p: p[0] !=p[1]).count()/float(testingRDD.count())
+        accuracy = labelsAndPreds.filter(lambda p: p[0] ==p[1]).count()/float(testingRDD.count())
+        truePositive = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 1).count()
+        falsePositive = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 1).count()
+        trueNegative = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 0).count()
+        falseNegative = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 0).count()
+
+        print(truePositive,falsePositive,float(testingRDD.count()))
+        Precision = truePositive/(truePositive + falsePositive)
+        Recall = truePositive/(truePositive + falseNegative)
+        #save result
+        temptrainErr = temptrainErr+trainErr
+        tempacc = tempacc+accuracy
+        tempPrecision = tempPrecision+Precision
+        tempRecall = tempRecall+Recall
+    return [temptrainErr/5,tempacc/5,tempPrecision/5,tempRecall/5]
 
 
-# #spark code
-#------------------------------------------------------------#-
-SparkContextHandler._master_ip = "10.14.24.101"
-sc = SparkContextHandler.get_spark_sc()
-#------------------------------------------------------------#
-#conf = SparkConf().setAppName('test').setMaster("local")
-#sc = SparkContext(conf=conf)
-#----------------------------#
-method = FrequencyDomain
-Iterations =100
-stepSize =1
-reqParam = 0.01
-temptrainErr = 0
-tempacc = 0
-tempPrecision = 0
-tempRecall = 0
-#----------------------------#
-mylog = []
-#parsedata
-data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Train_1sec.txt")
+# Input.
 startTime = time()
+data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Train_1sec.txt")
+test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Test_1sec.txt")
+trainData = data.map(FrequencyDomain)
+testData = test.map(FrequencyDomain)
 
-#randomdata = data.randomSplit([0.8,0.2])
-#use five folder
-trainData = data.map(method)
-#------------------start-----------------------------#
 print("start training!!")
-#Build the model
-model = SVMWithSGD.train(trainData,iterations=Iterations,step=stepSize,regParam=reqParam)
+SVM_Model = Train_Model(trainData,'SVM',100,1,0.01)
+result = Test_Model(testData,SVM_Model)
 runTime = time()-startTime
-
-#Evaluating the model on training data
-for x in range(0,5):
-    print("start testing!!" + str(x))
-    #test = sc.textFile("file:/home/spark/Downloads/sparkSvm/newdata1125/test(" + str(x + 1) + ").txt")
-    test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Test_1sec.txt")
-    testData = test.map(method)
-    labelsAndPreds = testData.map(lambda p: (p.label,model.predict(p.features)))
-    #In python3 ,lambda(x,y):x+y => lambda x_y:x_y[0] + x_y[1]
-    trainErr = labelsAndPreds.filter(lambda p: p[0] !=p[1]).count()/float(testData.count())
-    accuracy = labelsAndPreds.filter(lambda p: p[0] ==p[1]).count()/float(testData.count())
-    truePositive = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 1).count()
-    falsePositive = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 1).count()
-    trueNegative = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 0).count()
-    falseNegative = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 0).count()
-
-    print(truePositive,falsePositive,float(testData.count()))
-    Precision = truePositive/(truePositive + falsePositive)
-    Recall = truePositive/(truePositive + falseNegative)
-    #save result
-    temptrainErr = temptrainErr+trainErr
-    tempacc = tempacc+accuracy
-    tempPrecision = tempPrecision+Precision
-    tempRecall = tempRecall+Recall
-
 
 
 #-------------print result --------------------#
 print("Train setting:\n"
-        + "Iterations:" + str(Iterations) + "\n"
-        + "stepSize:" + str(stepSize) + "\n"
-        + "reqParam:" + str(reqParam) + "\n"
         + "Time:" + str(runTime) + "\n"
-        + "Training Error = " + str(temptrainErr/5)+"\n"
-        + "Accuracy = " + str(tempacc/5)+"\n"
-        + "Precision = "+str(tempPrecision/5)+"\n"
-        + "Recall = "+str(tempRecall/5)+"\n"
-        + "F-Measure = "+str(2*(tempPrecision/5)*(tempRecall/5)/((tempPrecision/5)+(tempRecall/5))))
+        + "Training Error = " + str(result[0])+"\n"
+        + "Accuracy = " + str(result[1])+"\n"
+        + "Precision = "+str(result[2])+"\n"
+        + "Recall = "+str(result[3])+"\n"
+        + "F-Measure = "+str(2*(result[2])*(result[3])/(result[2]+esult[3]))
 
-
-#save logir
-#sc.parallelize(mylog).saveAsTextFile("/user/spark/eventLog/")
 
 #Save and load model
-model.save(sc,"hdfs:///spark/Model/FTR_1SecModel")
+# SVM_Model.save(sc,"hdfs:///spark/Model/FTR_1SecModel")
 #sameModel = SVMModel.load(sc,"file:///home/spark/Desktop/model")
 
