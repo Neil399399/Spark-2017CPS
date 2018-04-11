@@ -110,13 +110,13 @@ testData = test.map(FrequencyDomain)
 
 # count
 TotalAmount = float(testData.count())
-oneBoltAmount = labelsAndPreds.filter(lambda p: p[0]==1).count()
-ragAmount = labelsAndPreds.filter(lambda p: p[0]==0).count()
 
 # run first layer
 print("First Prediction (Normal or unNormal)")
 first_output = InputLayer(testData,SVMModel)
 normalAmount = first_output.filter(lambda p: p[1]==1)
+oneBoltAmount = first_output.filter(lambda p: p[0]==1).count()
+ragAmount = first_output.filter(lambda p: p[0]==0).count()
 
 # run hidden1 layer
 print("Second Prediction (oneBolt or other)")
