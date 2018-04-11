@@ -15,6 +15,14 @@ from utilities.spark_context_handler import SparkContextHandler
 os.environ["PYSPARK_PYTHON"] = "python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "python3"
 logger = logging.getLogger("pyspark")
+SparkContextHandler._master_ip = "10.14.24.101"
+sc = SparkContextHandler.get_spark_sc()
+
+# Model and Data Dir
+firstLayerModel = "hdfs:///spark/Model/FNA_1SecModel"
+secondLayerModel = "hdfs:///spark/Model/FOA_1SecModel"
+thridLayerModel = "hdfs:///spark/Model/FTR_1SecModel"
+testData = "file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test_1sec.txt"
 
 #parse the data
 def testparsePoint(line):
@@ -62,7 +70,6 @@ def TimeDomain(line):
     newValue=[Max,Min,RMS,CF,SK,K]
     return newValue
 
-
 def FrequencyDomain(line):
     try:
         values = [float(x) for x in line.split("\t")]
@@ -81,36 +88,36 @@ def FrequencyDomain(line):
 
 
 # Start
-SparkContextHandler._master_ip = "10.14.24.101"
-sc = SparkContextHandler.get_spark_sc()
-#------------------------------------------------------------#
 startTime = time()
-#------------------------------------------------------------#\
 print("load testdata")
-test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test_1sec.txt")
+test = sc.textFile(testData)
 testData = test.map(FrequencyDomain)
-#------------------------------------------------------------#
+
+## first layer
 print("load model")
-Model = SVMModel.load(sc,"hdfs:////spark/Model/FNA_1SecModel")
+Model = SVMModel.load(sc,firstLayerModel)
 print("First Prediction (Normal or unNormal)")
-# labelsAndPreds = Model.predict(testData)
-# labelsAndPreds = testData.map(lambda p: (Model.predict(p),p))
 labelsAndPreds = testData.map(lambda p: (p.label, Model.predict(p.features),p.features))
+temp = labelsAndPreds.filter(lambda p: p[1]==0)
+### count
 TotalAmount = float(testData.count())
 normalAmount = labelsAndPreds.filter(lambda p: p[1]==1)
 oneBoltAmount = labelsAndPreds.filter(lambda p: p[0]==1).count()
 ragAmount = labelsAndPreds.filter(lambda p: p[0]==0).count()
 
-temp = labelsAndPreds.filter(lambda p: p[1]==0)
-
+## second layer
 print("Second Prediction (oneBolt or other)")
-Model2 = SVMModel.load(sc,"hdfs:///spark/Model/FOA_1SecModel")
+Model2 = SVMModel.load(sc,secondLayerModel)
 temp2 = temp.map(lambda p: (p[0],Model2.predict(p[2]),p[2]))
+### count
 oneBoltResult = temp2.filter(lambda p: p[1]==1)
 
+## third layer
 print("third Prediction (twoBolt or rag)")
-Model3 = SVMModel.load(sc,"hdfs:///spark/Model/FTR_1SecModel")
+Model3 = SVMModel.load(sc,thridLayerModel)
 temp3 = temp2.map(lambda p: (p[0],Model3.predict(p[2])))
+
+### count
 twoBoltResult = temp3.filter(lambda p: p[0]==p[1]and p[1]==1)
 ragResult = temp3.filter(lambda p: p[0]==p[1]and p[1]==0)
 

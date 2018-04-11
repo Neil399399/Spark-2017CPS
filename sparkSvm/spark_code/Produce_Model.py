@@ -122,8 +122,8 @@ trainData = data.map(FrequencyDomain)
 testData = test.map(FrequencyDomain)
 
 print("start training!!")
-SVM_Model = Train_Model(trainData,'SVM',100,1,0.01)
-result = Test_Model(testData,SVM_Model)
+model = Train_Model(trainData,'SVM',100,1,0.01)
+result = Test_Model(testData,model)
 runTime = time()-startTime
 
 
@@ -138,6 +138,5 @@ print("Train setting:\n"
 
 
 #Save and load model
-# SVM_Model.save(sc,"hdfs:///spark/Model/FTR_1SecModel")
-#sameModel = SVMModel.load(sc,"file:///home/spark/Desktop/model")
+# model.save(sc,"hdfs:///spark/Model/FTR_1SecModel")
 
