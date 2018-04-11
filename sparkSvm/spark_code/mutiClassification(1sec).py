@@ -5,7 +5,7 @@ import os
 import math
 import numpy as np
 from pyspark import SparkContext, SparkConf
-from pyspark.mllib.classification import SVMWithSGD
+from pyspark.mllib.classification import LogisticRegressionModel
 from pyspark.mllib.classification import SVMModel
 from pyspark.mllib.regression import LabeledPoint
 from utilities.spark_context_handler import SparkContextHandler
@@ -19,9 +19,9 @@ SparkContextHandler._master_ip = "10.14.24.101"
 sc = SparkContextHandler.get_spark_sc()
 
 # Model and Data Dir
-firstLayerModel = "hdfs:///spark/Model/FNA_1SecModel"
-secondLayerModel = "hdfs:///spark/Model/FOA_1SecModel"
-thridLayerModel = "hdfs:///spark/Model/FTR_1SecModel"
+firstLayerModel = "hdfs:///spark/Model/FNAL_1SecModel"
+secondLayerModel = "hdfs:///spark/Model/FOAL_1SecModel"
+thridLayerModel = "hdfs:///spark/Model/FTRL_1SecModel"
 testData = "file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test_1sec.txt"
 
 #parse the data
@@ -95,7 +95,7 @@ testData = test.map(FrequencyDomain)
 
 ## first layer
 print("load model")
-Model = SVMModel.load(sc,firstLayerModel)
+Model = LogisticRegressionModel.load(sc,firstLayerModel)
 print("First Prediction (Normal or unNormal)")
 labelsAndPreds = testData.map(lambda p: (p.label, Model.predict(p.features),p.features))
 temp = labelsAndPreds.filter(lambda p: p[1]==0)
@@ -107,18 +107,18 @@ ragAmount = labelsAndPreds.filter(lambda p: p[0]==0).count()
 
 ## second layer
 print("Second Prediction (oneBolt or other)")
-Model2 = SVMModel.load(sc,secondLayerModel)
+Model2 = LogisticRegressionModel.load(sc,secondLayerModel)
 temp2 = temp.map(lambda p: (p[0],Model2.predict(p[2]),p[2]))
 ### count
 oneBoltResult = temp2.filter(lambda p: p[1]==1)
 
 ## third layer
 print("third Prediction (twoBolt or rag)")
-Model3 = SVMModel.load(sc,thridLayerModel)
-temp3 = temp2.map(lambda p: (p[0],Model3.predict(p[2])))
+Model3 = LogisticRegressionModel.load(sc,thridLayerModel)
+temp3 = temp2.filter(lambda p: p[1]==0).map(lambda p: (p[0],Model3.predict(p[2])))
 
 ### count
-twoBoltResult = temp3.filter(lambda p: p[0]==p[1]and p[1]==1)
+twoBoltResult = temp3.filter(lambda p: p[1]==1)
 ragResult = temp3.filter(lambda p: p[0]==p[1]and p[1]==0)
 
 #end
@@ -127,9 +127,9 @@ print("TotalAmount:",TotalAmount)
 print("oneBolt:",oneBoltAmount)
 print("rag:",ragAmount)
 print("normal result:",normalAmount.count())
-print("oneBolt result:",oneBoltResult.count()/oneBoltAmount)
-print("twoBolt result:",twoBoltResult.count())
-print("rag result:",ragResult.count()/ragAmount)
+print("oneBolt result:",oneBoltResult.count(),oneBoltResult.count()/oneBoltAmount)
+print("twoBolt result:",twoBoltResult.count(),twoBoltResult.count()/TotalAmount)
+print("rag result:",ragResult.count(),ragResult.count()/ragAmount)
 print("Running Time:",runTime)
 
 
