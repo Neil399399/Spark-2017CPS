@@ -81,7 +81,7 @@ def Train_Model(trainingRDD, method, parameter_Iterations, parameter_stepSize, p
     if method == 'Logistic':
         Logistic_Model = LogisticRegressionWithLBFGS.train(trainingRDD, iterations=parameter_Iterations, regParam=parameter_reqParam)
         return Logistic_Model
-    else if method == 'SVM':
+    elif method == 'SVM':
         SVM_Model = SVMWithSGD.train(trainingRDD,iterations=parameter_Iterations,step=parameter_stepSize,regParam=parameter_reqParam)
         return SVM_Model
     else:
@@ -134,7 +134,7 @@ print("Train setting:\n"
         + "Accuracy = " + str(result[1])+"\n"
         + "Precision = "+str(result[2])+"\n"
         + "Recall = "+str(result[3])+"\n"
-        + "F-Measure = "+str(2*(result[2])*(result[3])/(result[2]+esult[3]))
+        + "F-Measure = "+str(2*(result[2])*(result[3])/(result[2]+result[3])))
 
 
 #Save and load model
