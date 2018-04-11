@@ -86,6 +86,21 @@ def FrequencyDomain(line):
     newValue.append(values[828])
     return LabeledPoint(newValue[0], newValue[1:])
 
+def InputLayer(originRDD,Model):
+    Model1 = Model.load(sc,firstLayerModel)
+    outputRDD = originRDD.map(lambda p: (p.label, Model1.predict(p.features),p.features))
+    return outputRDD
+
+def HiddenLayer(InputRDD,Model):
+    Model2 = Model.load(sc,secondLayerModel)
+    outputRDD = InputRDD.filter(lambda p: p[1]==0).map(lambda p: (p[0],Model2.predict(p[2]),p[2]))
+    return outputRDD
+
+def OutputLayer(InputRDD,Model):
+    Model3 = Model.load(sc,thridLayerModel)
+    outputRDD = InputRDD.filter(lambda p: p[1]==0).map(lambda p: (p[0],Model3.predict(p[2])))
+    return outputRDD
+
 
 # Start
 startTime = time()
@@ -93,43 +108,37 @@ print("load testdata")
 test = sc.textFile(testData)
 testData = test.map(FrequencyDomain)
 
-## first layer
-print("load model")
-Model = LogisticRegressionModel.load(sc,firstLayerModel)
-print("First Prediction (Normal or unNormal)")
-labelsAndPreds = testData.map(lambda p: (p.label, Model.predict(p.features),p.features))
-temp = labelsAndPreds.filter(lambda p: p[1]==0)
-### count
+# count
 TotalAmount = float(testData.count())
-normalAmount = labelsAndPreds.filter(lambda p: p[1]==1)
 oneBoltAmount = labelsAndPreds.filter(lambda p: p[0]==1).count()
 ragAmount = labelsAndPreds.filter(lambda p: p[0]==0).count()
 
-## second layer
+# run first layer
+print("First Prediction (Normal or unNormal)")
+first_output = InputLayer(testData,SVMModel)
+normalAmount = first_output.filter(lambda p: p[1]==1)
+
+# run hidden1 layer
 print("Second Prediction (oneBolt or other)")
-Model2 = LogisticRegressionModel.load(sc,secondLayerModel)
-temp2 = temp.map(lambda p: (p[0],Model2.predict(p[2]),p[2]))
-### count
-oneBoltResult = temp2.filter(lambda p: p[1]==1)
+second_output = HiddenLayer(first_output,SVMModel)
+oneBoltResult = second_output.filter(lambda p: p[1]==1)
 
-## third layer
+# run output layer
 print("third Prediction (twoBolt or rag)")
-Model3 = LogisticRegressionModel.load(sc,thridLayerModel)
-temp3 = temp2.filter(lambda p: p[1]==0).map(lambda p: (p[0],Model3.predict(p[2])))
+final_output = OutputLayer(second_output,SVMModel)
+twoBoltResult = final_output.filter(lambda p: p[1]==1)
+ragResult = final_output.filter(lambda p: p[0]==p[1]and p[1]==0)
 
-### count
-twoBoltResult = temp3.filter(lambda p: p[1]==1)
-ragResult = temp3.filter(lambda p: p[0]==p[1]and p[1]==0)
-
-#end
+# end
 runTime = time()-startTime
-print("TotalAmount:",TotalAmount)
-print("oneBolt:",oneBoltAmount)
-print("rag:",ragAmount)
-print("normal result:",normalAmount.count())
-print("oneBolt result:",oneBoltResult.count(),oneBoltResult.count()/oneBoltAmount)
-print("twoBolt result:",twoBoltResult.count(),twoBoltResult.count()/TotalAmount)
-print("rag result:",ragResult.count(),ragResult.count()/ragAmount)
-print("Running Time:",runTime)
+print("Total amount:",TotalAmount)
+print("OneBolt amount:",oneBoltAmount)
+print("Rag amount:",ragAmount)
+## predicted
+print("Normal prediction:",normalAmount.count())
+print("OneBolt prediction:",oneBoltResult.count()+" Percent:"+str(oneBoltResult.count()*100/oneBoltAmount))
+print("TwoBolt prediction:",twoBoltResult.count())
+print("Rag prediction:",ragResult.count()+" Percent:"+str(ragResult.count()*100/ragAmount))
+print("Running Time (sec):",runTime)
 
 
