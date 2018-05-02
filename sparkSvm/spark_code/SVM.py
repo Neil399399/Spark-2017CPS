@@ -14,6 +14,8 @@ from pyspark.mllib.regression import LabeledPoint
 os.environ["PYSPARK_PYTHON"] = "python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "python3"
 logger = logging.getLogger("pyspark")
+trainDir = "file:/home/spark/Downloads/sparkSvm/newdata1125/merge.txt"
+testDir = 
 
 #parse the data
 def parsePoint(line):
@@ -101,7 +103,7 @@ tempRecall = 0
 #----------------------------#
 mylog = []
 #parsedata
-data = sc.textFile("file:/home/spark/Downloads/sparkSvm/newdata1125/merge.txt")
+data = sc.textFile(trainDir)
 startTime = time()
 
 #randomdata = data.randomSplit([0.8,0.2])
@@ -117,7 +119,6 @@ runTime = time()-startTime
 for x in range(0,5):
     print("start testing!!" + str(x))
     test = sc.textFile("file:/home/spark/Downloads/sparkSvm/newdata1125/test(" + str(x + 1) + ").txt")
-    #test = sc.textFile("file:/home/spark/Downloads/sparkSvm/SVM_TEST.txt")
     testData = test.map(method)
     labelsAndPreds = testData.map(lambda p: (p.label,model.predict(p.features)))
     #In python3 ,lambda(x,y):x+y => lambda x_y:x_y[0] + x_y[1]
