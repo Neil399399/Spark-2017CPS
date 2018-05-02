@@ -1,13 +1,13 @@
 import os
 import csv
 
-with open ("D:/CPS/rag-data/Train-1sec.txt","r") as csvfile:
-    Data= [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter="\t")]
-    for i in range(0,len(Data)):
-        Data[i].insert(0,1)
-    print(len(Data))
+with open ("D:/News_Final.csv","r",encoding = 'utf8') as csvfile:
+    Data= csv.reader(csvfile,delimiter=",")
+    a = list(Data)
 
-
+for y in range(0,len(a)):
+    b=[x for x in a[y][2].split(" ")]
+    print(b)
 
 # with open ("Abnormal_2000RPM_1000.txt","r") as csvfile:
 #     WData = [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter="\t")]
