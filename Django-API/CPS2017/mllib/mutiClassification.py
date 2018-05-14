@@ -1,7 +1,9 @@
 # Model and Data Dir
-firstLayerModel = "hdfs:///spark/Model/FNAL_1SecModel"
-secondLayerModel = "hdfs:///spark/Model/FOAL_1SecModel"
-thridLayerModel = "hdfs:///spark/Model/FTRL_1SecModel"
+import time
+from CPS2017 import sc
+from CPS2017 import LR_First_Model,LR_Second_Model,LR_Third_Model
+from CPS2017 import SVM_First_Model,SVM_Second_Model,SVM_Third_Model
+
 
 def FrequencyDomain(line):
     import numpy as np
@@ -16,38 +18,31 @@ def FrequencyDomain(line):
     newValue.append(temp[827])
     return newValue
 
-def InputLayer(sc,originRDD,Model):
-    Model1 = Model.load(sc,firstLayerModel)
-    outputRDD = originRDD.map(lambda p: (Model1.predict(p),p))
+def InputLayer(originRDD,Model):
+    outputRDD = originRDD.map(lambda p: (Model.predict(p),p))
     Normal = outputRDD.filter(lambda p: p[0] == 1).count()
     if Normal != 0:
         return 'Normal'
     else:
         return outputRDD
 
-def HiddenLayer(sc,InputRDD,Model):
-    Model2 = Model.load(sc,secondLayerModel)
-    outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: (Model2.predict(p[1]),p[1]))
+def HiddenLayer(InputRDD,Model):
+    outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: (Model.predict(p[1]),p[1]))
     OneBolt = outputRDD.filter(lambda p: p[0] == 1).count()
     if OneBolt != 0:
         return 'OneBolt'
     else:
         return outputRDD
 
-def OutputLayer(sc,InputRDD,Model):
-    Model3 = Model.load(sc,thridLayerModel)
-    outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: Model3.predict(p[1]))
+def OutputLayer(InputRDD,Model):
+    outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: Model.predict(p[1]))
     TwoBolt = outputRDD.filter(lambda p: p == 1).count()
     if TwoBolt != 0:
        return 'TwoBolt'
     else:
        return 'Rag'
 
-def mutiClassification_function(rdd, sc, method):
-    import time
-    from pyspark.mllib.classification import LogisticRegressionModel
-    from pyspark.mllib.classification import SVMModel
-
+def mutiClassification_function(rdd,method):
     print("Start do fft parser ...")
     Start_time = time.time()
     output = FrequencyDomain(rdd)
@@ -59,19 +54,19 @@ def mutiClassification_function(rdd, sc, method):
     start_time = time.time()
     if method == 'LogisticRegression':
         print("First Predict ... (Normal or unNormal)")
-        first_output = InputLayer(sc,testData, LogisticRegressionModel)
+        first_output = InputLayer(testData, LR_First_Model)
         if first_output =='Normal':
             print('Predict time:', time.time() - start_time)
             return 'Normal'
         else:
             print("Second Predict ... (oneBolt or other)")
-            second_output = HiddenLayer(sc,first_output, LogisticRegressionModel)
+            second_output = HiddenLayer(first_output, LR_Second_Model)
             if second_output == 'OneBolt':
                 print('Predict time:', time.time() - start_time)
                 return 'OneBolt'
             else:
                 print("third Predict ... (twoBolt or rag)")
-                final_output = OutputLayer(sc,second_output, LogisticRegressionModel)
+                final_output = OutputLayer(second_output, LR_Third_Model)
                 if final_output == 'TwoBolt':
                     print('Predict time:', time.time() - start_time)
                     return 'TwoBolt'
@@ -81,20 +76,24 @@ def mutiClassification_function(rdd, sc, method):
 
     elif method == 'SVM':
         print("First Predict ... (Normal or unNormal)")
-        first_output = InputLayer(sc,testData, SVMModel)
+        first_output = InputLayer(testData, SVM_First_Model)
         if first_output =='Normal':
+            print('Predict time:', time.time() - start_time)
             return 'Normal'
         else:
             print("Second Predict ... (oneBolt or other)")
-            second_output = HiddenLayer(sc,first_output, SVMModel)
+            second_output = HiddenLayer(first_output, SVM_Second_Model)
             if second_output == 'OneBolt':
+                print('Predict time:', time.time() - start_time)
                 return 'OneBolt'
             else:
                 print("third Predict ... (twoBolt or rag)")
-                final_output = OutputLayer(sc,second_output, SVMModel)
+                final_output = OutputLayer(second_output, SVM_Third_Model)
                 if final_output == 'TwoBolt':
+                    print('Predict time:', time.time() - start_time)
                     return 'TwoBolt'
                 else:
+                    print('Predict time:', time.time() - start_time)
                     return 'Rag'
     else:
         return "error"
