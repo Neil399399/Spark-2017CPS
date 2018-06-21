@@ -1,9 +1,11 @@
 # Model and Data Dir
 import time
-from CPS2017 import sc
+from CPS2017 import sc,logger_server
 from CPS2017 import LR_First_Model,LR_Second_Model,LR_Third_Model
 from CPS2017 import SVM_First_Model,SVM_Second_Model,SVM_Third_Model
-
+from CPS2017 import Module_LR_First_Model,Module_LR_Second_Model,Module_LR_Third_Model
+from CPS2017 import Module_SVM_First_Model,Module_SVM_Second_Model,Module_SVM_Third_Model
+from CPS2017 import Random_Forest_Model,Module_Random_Forest_Model
 
 def FrequencyDomain(line):
     import numpy as np
@@ -43,57 +45,120 @@ def OutputLayer(InputRDD,Model):
        return 'Rag'
 
 def mutiClassification_function(rdd,method):
-    print("Start do fft parser ...")
-    Start_time = time.time()
     output = FrequencyDomain(rdd)
     testData = sc.parallelize([output])
-    print('fft_parser_time:',time.time() - Start_time)
-
     # -----------------------Start predict.-------------------------------------#
-    print("Start predict ...")
+    logger_server.info('prediction')
     start_time = time.time()
     if method == 'LogisticRegression':
-        print("First Predict ... (Normal or unNormal)")
+        logger_server.info('First Predict.(Normal or unNormal)')
         first_output = InputLayer(testData, LR_First_Model)
         if first_output =='Normal':
-            print('Predict time:', time.time() - start_time)
             return 'Normal'
         else:
-            print("Second Predict ... (oneBolt or other)")
+            logger_server.info('Second Predict.(oneBolt or other)')
             second_output = HiddenLayer(first_output, LR_Second_Model)
             if second_output == 'OneBolt':
-                print('Predict time:', time.time() - start_time)
                 return 'OneBolt'
             else:
-                print("third Predict ... (twoBolt or rag)")
+                logger_server.info('third Predict.(twoBolt or rag)')
                 final_output = OutputLayer(second_output, LR_Third_Model)
                 if final_output == 'TwoBolt':
-                    print('Predict time:', time.time() - start_time)
                     return 'TwoBolt'
                 else:
-                    print('Predict time:', time.time() - start_time)
                     return 'Rag'
 
     elif method == 'SVM':
-        print("First Predict ... (Normal or unNormal)")
+        logger_server.info('First Predict.(Normal or unNormal)')
         first_output = InputLayer(testData, SVM_First_Model)
         if first_output =='Normal':
-            print('Predict time:', time.time() - start_time)
             return 'Normal'
         else:
-            print("Second Predict ... (oneBolt or other)")
+            logger_server.info('Second Predict.(oneBolt or other)')
             second_output = HiddenLayer(first_output, SVM_Second_Model)
             if second_output == 'OneBolt':
-                print('Predict time:', time.time() - start_time)
                 return 'OneBolt'
             else:
-                print("third Predict ... (twoBolt or rag)")
+                logger_server.info('third Predict.(twoBolt or rag)')
                 final_output = OutputLayer(second_output, SVM_Third_Model)
                 if final_output == 'TwoBolt':
-                    print('Predict time:', time.time() - start_time)
                     return 'TwoBolt'
                 else:
-                    print('Predict time:', time.time() - start_time)
                     return 'Rag'
+
+    elif method == 'random_forest':
+        logger_server.info('do random forest.')
+        for test in testData.collect():
+            predict = Random_Forest_Model.predict(test)
+            if predict == 0:
+                return 'Normal'
+            elif predict == 1:
+                return 'OneBolt'
+            elif predict == 2:
+                return 'TwoBolt'
+            elif predict == 3:
+                return 'Rag'
     else:
+        logger_server.warning('prediction failed')
         return "error"
+
+def mutiClassification_function_module(rdd,method):
+    output = FrequencyDomain(rdd)
+    testData = sc.parallelize([output])
+    # -----------------------Start predict.-------------------------------------#
+    logger_server.info('prediction')
+    start_time = time.time()
+    if method == 'LogisticRegression':
+        logger_server.info('First Predict.(Normal or unNormal)')
+        first_output = InputLayer(testData, Module_LR_First_Model)
+        if first_output =='Normal':
+            return 'Normal'
+        else:
+            logger_server.info('Second Predict.(oneBolt or other)')
+            second_output = HiddenLayer(first_output, Module_LR_Second_Model)
+            if second_output == 'OneBolt':
+                return 'OneBolt'
+            else:
+                logger_server.info('third Predict.(twoBolt or rag)')
+                final_output = OutputLayer(second_output, Module_LR_Third_Model)
+                if final_output == 'TwoBolt':
+                    return 'TwoBolt'
+                else:
+                    return 'Rag'
+
+    elif method == 'SVM':
+        logger_server.info('First Predict.(Normal or unNormal)')
+        first_output = InputLayer(testData, Module_SVM_First_Model)
+        if first_output =='Normal':
+            return 'Normal'
+        else:
+            logger_server.info('Second Predict.(oneBolt or other)')
+            second_output = HiddenLayer(first_output, Module_SVM_Second_Model)
+            if second_output == 'OneBolt':
+                return 'OneBolt'
+            else:
+                logger_server.info('third Predict.(twoBolt or rag)')
+                final_output = OutputLayer(second_output, Module_SVM_Third_Model)
+                if final_output == 'TwoBolt':
+                    return 'TwoBolt'
+                else:
+                    return 'Rag'
+
+    elif method == 'random_forest':
+        logger_server.info('do random forest.')
+        for test in testData.collect():
+            predict = Module_Random_Forest_Model.predict(test)
+            if predict == 0:
+                return 'Normal'
+            elif predict == 1:
+                return 'OneBolt'
+            elif predict == 2:
+                return 'TwoBolt'
+            elif predict == 3:
+                return 'Rag'
+    else:
+        logger_server.warning('prediction failed')
+        return "error"
+
+def environmental_threshold(environmental_info):
+    return True

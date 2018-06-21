@@ -19,10 +19,10 @@ SparkContextHandler._master_ip = "10.14.24.101"
 sc = SparkContextHandler.get_spark_sc()
 
 # Model and Data Dir
-firstLayerModel = "hdfs:///spark/Model/FNA_1SecModel"
-secondLayerModel = "hdfs:///spark/Model/FOA_1SecModel"
-thridLayerModel = "hdfs:///spark/Model/FTR_1SecModel"
-testData = "file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test_1sec.txt"
+firstLayerModel = "hdfs:///spark/Model/FNAL_1SecModel"
+secondLayerModel = "hdfs:///spark/Model/FOAL_1SecModel"
+thridLayerModel = "hdfs:///spark/Model/FTRL_1SecModel"
+testData = "file:/home/spark/Documents/neil-git/dataset/normal_twobolt/Test_1sec.txt"
 
 #parse the data
 def testparsePoint(line):
@@ -113,19 +113,19 @@ TotalAmount = testData.count()
 
 # run first layer
 print("First Prediction (Normal or unNormal)")
-first_output = InputLayer(testData,SVMModel)
+first_output = InputLayer(testData,LogisticRegressionModel)
 normalAmount = first_output.filter(lambda p: p[1]==1).count()
 oneBoltAmount = first_output.filter(lambda p: p[0]==1).count()
 ragAmount = first_output.filter(lambda p: p[0]==0).count()
 
 # run hidden1 layer
 print("Second Prediction (oneBolt or other)")
-second_output = HiddenLayer(first_output,SVMModel)
+second_output = HiddenLayer(first_output,LogisticRegressionModel)
 oneBoltResult = second_output.filter(lambda p: p[1]==1).count()
 
 # run output layer
 print("third Prediction (twoBolt or rag)")
-final_output = OutputLayer(second_output,SVMModel)
+final_output = OutputLayer(second_output,LogisticRegressionModel)
 twoBoltResult = final_output.filter(lambda p: p[1]==1).count()
 ragResult = final_output.filter(lambda p: p[0]==p[1]and p[1]==0).count()
 
