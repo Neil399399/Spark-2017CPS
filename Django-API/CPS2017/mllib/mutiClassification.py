@@ -12,25 +12,27 @@ def FrequencyDomain(line):
     # change data used fft and calculate distance ----- root(a**2+b**2)
     newValue = []
     temp = line.collect()
-    complex = np.fft.fft(temp[0:825])
-    for i in range(0, len(complex)):
+    print(len(temp))
+    complex = np.fft.fft(temp[0:1650])
+    for i in range(0,825):
         distanceOfComplex = (complex[i].real ** 2 + complex[i].imag ** 2) ** 0.5
         newValue.append(distanceOfComplex)
-    newValue.append(temp[826])
-    newValue.append(temp[827])
+    print(len(newValue))
+    newValue.append(temp[1651])
+    newValue.append(temp[1652])
     return newValue
 
 def InputLayer(originRDD,Model):
     outputRDD = originRDD.map(lambda p: (Model.predict(p),p))
-    Normal = outputRDD.filter(lambda p: p[0] == 1).count()
+    Normal = outputRDD.filter(lambda p: p[0] == 0).count()
     if Normal != 0:
         return 'Normal'
     else:
-        return outputRDD
+        return 'unNormal'
 
 def HiddenLayer(InputRDD,Model):
     outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: (Model.predict(p[1]),p[1]))
-    OneBolt = outputRDD.filter(lambda p: p[0] == 1).count()
+    OneBolt = outputRDD.filter(lambda p: p[0] == 0).count()
     if OneBolt != 0:
         return 'OneBolt'
     else:
@@ -38,7 +40,7 @@ def HiddenLayer(InputRDD,Model):
 
 def OutputLayer(InputRDD,Model):
     outputRDD = InputRDD.filter(lambda p: p[0]==0).map(lambda p: Model.predict(p[1]))
-    TwoBolt = outputRDD.filter(lambda p: p == 1).count()
+    TwoBolt = outputRDD.filter(lambda p: p == 0).count()
     if TwoBolt != 0:
        return 'TwoBolt'
     else:
@@ -74,17 +76,18 @@ def mutiClassification_function(rdd,method):
         if first_output =='Normal':
             return 'Normal'
         else:
-            logger_server.info('Second Predict.(oneBolt or other)')
-            second_output = HiddenLayer(first_output, SVM_Second_Model)
-            if second_output == 'OneBolt':
-                return 'OneBolt'
-            else:
-                logger_server.info('third Predict.(twoBolt or rag)')
-                final_output = OutputLayer(second_output, SVM_Third_Model)
-                if final_output == 'TwoBolt':
-                    return 'TwoBolt'
-                else:
-                    return 'Rag'
+            return 'unNormal'
+            # logger_server.info('Second Predict.(oneBolt or other)')
+            # second_output = HiddenLayer(first_output, SVM_Second_Model)
+            # if second_output == 'OneBolt':
+            #     return 'OneBolt'
+            # else:
+            #     logger_server.info('third Predict.(twoBolt or rag)')
+            #     final_output = OutputLayer(second_output, SVM_Third_Model)
+            #     if final_output == 'TwoBolt':
+            #         return 'TwoBolt'
+            #     else:
+            #         return 'Rag'
 
     elif method == 'random_forest':
         logger_server.info('do random forest.')

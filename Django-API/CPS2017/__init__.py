@@ -3,19 +3,25 @@ from pyspark.mllib.classification import LogisticRegressionModel
 from pyspark.mllib.classification import SVMModel
 from utilities.spark_context_handler import SparkContextHandler
 from pyspark.mllib.tree import RandomForestModel
-
+import pymongo
 import pysolr
 import logging
 
 # basic config.
 CPS_TEST_SOLR_URL = "http://140.124.183.37:8983/solr/2017CPS/"
+Cloud_Motor_url = "http://140.124.184.204:8090/Cloud/Motor/QuerySecond"
+Cloud_Module_url = "http://140.124.184.204:8090/Cloud/Motor/QuerySecond"
+Cloud_WSN_url = "http://140.124.184.204:8090/Cloud/WSN/QuerySecond"
+Cloud_Predict_url = "http://140.124.184.204:8090/Cloud/Prediction/Insert"
+Om2m_url = "http://140.124.184.204:8082/~/in-cse/cnt-390684604"
+
 # engine model.
-LR_Layer1 = "hdfs:///spark/Model/FNAL_1SecModel"
-LR_Layer2 = "hdfs:///spark/Model/FOAL_1SecModel"
-LR_Layer3 = "hdfs:///spark/Model/FTRL_1SecModel"
-SVM_Layer1 = "hdfs:///spark/Model/FNA_1SecModel"
-SVM_Layer2 = "hdfs:///spark/Model/FOA_1SecModel"
-SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
+LR_Layer1 = "hdfs:///spark/Model/logic_Model1"
+LR_Layer2 = "hdfs:///spark/Model/logic_Model2"
+LR_Layer3 = "hdfs:///spark/Model/logic_Model3"
+SVM_Layer1 = "hdfs:///spark/Model/SVM_Model1_v4"
+SVM_Layer2 = "hdfs:///spark/Model/SVM_Model2new"
+SVM_Layer3 = "hdfs:///spark/Model/SVM_Model3new"
 Random_Forest = "hdfs:///spark/Model/random_forest_Model"
 # module model.
 Module_LR_Layer1 = "hdfs:///spark/Model/FNAL_1SecModel"
@@ -28,9 +34,13 @@ Module_Random_Forest = "hdfs:///spark/Model/random_forest_Model"
 
 # solr server.
 solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
+# mongodb
+# client = pymongo.MongoClient(host='localhost', port=27017)
+# mongodb = client.dbname
+
 
 # spark config.
-# SparkContextHandler._master_ip = "10.14.24.101"
+# SparkContextHandler._master_ip = "10.14.24.101"g
 # sc = SparkContextHandler.get_spark_sc()
 conf = SparkConf().setAppName('test').setMaster('local')
 sc = SparkContext(conf=conf)
