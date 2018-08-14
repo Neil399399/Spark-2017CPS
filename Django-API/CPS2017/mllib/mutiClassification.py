@@ -5,7 +5,7 @@ from CPS2017 import LR_First_Model,LR_Second_Model,LR_Third_Model
 from CPS2017 import SVM_First_Model,SVM_Second_Model,SVM_Third_Model
 
 
-def FrequencyDomain(line):
+def FFT(line):
     import numpy as np
     # change data used fft and calculate distance ----- root(a**2+b**2)
     newValue = []
@@ -45,7 +45,7 @@ def OutputLayer(InputRDD,Model):
 def mutiClassification_function(rdd,method):
     print("Start do fft parser ...")
     Start_time = time.time()
-    output = FrequencyDomain(rdd)
+    output = FFT(rdd)
     testData = sc.parallelize([output])
     print('fft_parser_time:',time.time() - Start_time)
 

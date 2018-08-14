@@ -3,4 +3,5 @@ from CPS2017 import views
 
 urlpatterns = [
     url(r'', views.mutiClassification, name='mutiClassification'),
+    url(r'', views.mutiClassification, name='mold')
 ]

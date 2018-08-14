@@ -14,6 +14,7 @@ SVM_Layer1 = "hdfs:///spark/Model/FNA_1SecModel"
 SVM_Layer2 = "hdfs:///spark/Model/FOA_1SecModel"
 SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
 
+mold_Model = 'hdfs:///spark/Model/mold_Model'
 # solr server.
 solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 
