@@ -76,6 +76,15 @@ def FrequencyDomain(line):
      newValue.append(values[828])
      return LabeledPoint(newValue[0],newValue[1:])
 
+def MotorPlatform(line):
+    try:
+        values = [float(x) for x in line.split("\t")]
+    except:
+        values = [float(x) for x in line.split(",")]
+    # change data used fft and calculate distance ----- root(a**2+b**2)
+
+    return LabeledPoint(values[0], values[1:])
+
 def Train_Model(trainingRDD, method, parameter_Iterations, parameter_stepSize, parameter_reqParam):
     # model load in.
     if method == 'Logistic':
@@ -98,10 +107,10 @@ def Test_Model(testingRDD, Model):
         labelsAndPreds = testingRDD.map(lambda p: (p.label,Model.predict(p.features)))
         trainErr = labelsAndPreds.filter(lambda p: p[0] !=p[1]).count()/float(testingRDD.count())
         accuracy = labelsAndPreds.filter(lambda p: p[0] ==p[1]).count()/float(testingRDD.count())
-        truePositive = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 1).count()
-        falsePositive = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 1).count()
-        trueNegative = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 0).count()
-        falseNegative = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 0).count()
+        truePositive = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 0).count()
+        falsePositive = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 0).count()
+        trueNegative = labelsAndPreds.filter(lambda p: p[0] == p[1] and p[1] == 1).count()
+        falseNegative = labelsAndPreds.filter(lambda p: p[0] != p[1] and p[1] == 1).count()
 
         print(truePositive,falsePositive,float(testingRDD.count()))
         Precision = truePositive/(truePositive + falsePositive)
@@ -116,14 +125,14 @@ def Test_Model(testingRDD, Model):
 
 # Input.
 startTime = time()
-data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Train_1sec.txt")
-test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/twoBolt_rag/Test_1sec.txt")
-trainData = data.map(FrequencyDomain)
-testData = test.map(FrequencyDomain)
+data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/Motor_platform/2000RPM/1out_2out/Train_12.txt")
+test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/Motor_platform/2000RPM/1out_2out/Test_12.txt")
+trainData = data.map(MotorPlatform)
+testData = test.map(MotorPlatform)
 
 print("start training!!")
-model = Train_Model(trainData,'SVM',100,1,0.01)
-result = Test_Model(testData,model)
+SVM_Model = Train_Model(trainData,'SVM',100,1,0.1)
+result = Test_Model(testData,SVM_Model)
 runTime = time()-startTime
 
 
@@ -138,5 +147,6 @@ print("Train setting:\n"
 
 
 #Save and load model
-# model.save(sc,"hdfs:///spark/Model/FTR_1SecModel")
+# Logistic_Model.save(sc,"hdfs:///spark/Model/FNAL_1SecModel")
+#sameModel = SVMModel.load(sc,"file:///home/spark/Desktop/model")
 

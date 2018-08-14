@@ -15,17 +15,13 @@ from utilities.spark_context_handler import SparkContextHandler
 os.environ["PYSPARK_PYTHON"] = "python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "python3"
 logger = logging.getLogger("pyspark")
-testDir = "file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test.txt"
-firstLayerModel = "hdfs:///home/spark/Desktop/FNOModel"
-secondLayerModel = "hdfs:///home/spark/Desktop/FORModel"
 
 #parse the data
 def testparsePoint(line):
     values = [float(x) for x in line.split(",")]
     #return values
     return LabeledPoint(values[0],values[1:])
-    
-# TimeDomain parser for 1 line 4000 attributes.
+
 def TimeDomain(line):
     try:
        values = [float(x) for x in line.split("\t")]
@@ -66,7 +62,7 @@ def TimeDomain(line):
     newValue=[Max,Min,RMS,CF,SK,K]
     return newValue
 
-# FrequencyDomain parser for 1 line 4000 attributes.
+
 def FrequencyDomain(line):
     try:
         values = [float(x) for x in line.split("\t")]
@@ -91,12 +87,14 @@ sc = SparkContextHandler.get_spark_sc()
 startTime = time()
 #------------------------------------------------------------#\
 print("load testdata")
-test = sc.textFile(testDir)
+test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/oneBolt_rag/Test.txt")
 testData = test.map(FrequencyDomain)
 #------------------------------------------------------------#
 print("load model")
-Model = SVMModel.load(sc,firstLayerModel)
+Model = SVMModel.load(sc,"hdfs:///home/spark/Desktop/FNOModel")
 print("First Prediction (Normal or unNormal)")
+# labelsAndPreds = Model.predict(testData)
+# labelsAndPreds = testData.map(lambda p: (Model.predict(p),p))
 labelsAndPreds = testData.map(lambda p: (p.label, Model.predict(p.features),p.features))
 TotalAmount = float(testData.count())
 temp = labelsAndPreds.filter(lambda p: p[1]==0)
@@ -105,7 +103,7 @@ ragAmount = labelsAndPreds.filter(lambda p: p[0]==0).count()
 print("Normal or unNormal:",temp.count()/TotalAmount)
 
 print("Second Prediction (oneBolt or rag)")
-Model2 = SVMModel.load(sc,secondLayerModel)
+Model2 = SVMModel.load(sc,"hdfs:///home/spark/Desktop/FORModel")
 temp2 = temp.map(lambda p: (p[0],Model2.predict(p[2])))
 oneBoltResult = temp2.filter(lambda p: p[0]==p[1]and p[1]==1)
 ragResult = temp2.filter(lambda p: p[0]==p[1]and p[1]==0)

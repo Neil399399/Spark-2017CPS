@@ -4,7 +4,7 @@ import logging
 import os
 import math
 import numpy as np
-#from utilities.spark_context_handler import SparkContextHandler
+from utilities.spark_context_handler import SparkContextHandler
 from pyspark import SparkContext, SparkConf
 from pyspark.mllib.classification import SVMWithSGD
 from pyspark.mllib.classification import SVMModel
@@ -13,7 +13,8 @@ from pyspark.mllib.regression import LabeledPoint
 #setting OS environment
 os.environ["PYSPARK_PYTHON"] = "python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "python3"
-logger = logging.getLogger("pyspark")
+logger = logging.getLogger("pyspark"
+                           "")
 
 #parse the data
 def testparsePoint(line):
@@ -82,6 +83,8 @@ def frequencyDomain(line):
 def f(x):
     print(x)
 #------------------------------------------------------------#
+# conf = SparkConf().setAppName('test').setMaster('local')
+# sc = SparkContext(conf=conf)
 SparkContextHandler._master_ip = "10.14.24.101"
 sc = SparkContextHandler.get_spark_sc()
 #------------------------------------------------------------#\
