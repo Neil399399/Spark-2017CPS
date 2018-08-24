@@ -7,15 +7,23 @@ import matplotlib.pyplot as plt
 folder = 'D:/temp/'
 
 # parser for vibration.
-def parser(data):
+def parser(data,label):
     # variable.
     pvdf1=[]
     pvdf2=[]
-    #1~10001
-    for x in range (1,10001):
-        pvdf1.append(float(data[x][1]))
-        pvdf2.append(float(data[x][2]))
-    return pvdf1, pvdf2
+    pvdf3=[]
+    for x in range (1,len(data),10000):
+        temp_pvdf1 = [label]
+        temp_pvdf2 = [label]
+        temp_pvdf3 = [label]
+        for y in range (0,10000):
+            temp_pvdf1.append(float(data[x+y][1]))
+            temp_pvdf2.append(float(data[x+y][2]))
+            temp_pvdf3.append(float(data[x+y][3]))
+        pvdf1.append(temp_pvdf1)
+        pvdf2.append(temp_pvdf2)
+        pvdf3.append(temp_pvdf3)
+    return pvdf1, pvdf2, pvdf3
 
 def amplitude(List,Range):
     Complex = np.fft.fft(List)/len(List)
@@ -56,20 +64,33 @@ if __name__ == "__main__":
     for root,dirs,files in os.walk(folder):
         for filename in files:
             FileNames.append(filename)
+    for filename in FileNames:
+        with open (folder+filename,"r") as file:
+            Data = list(csv.reader(file,delimiter="\t"))
+        pvdf1,pvdf2,pvdf3 = parser(Data,0)
     
-    print(FileNames[0])
-    with open (folder+FileNames[0],"r") as file:
-        Data = list(csv.reader(file,delimiter="\t"))
-    pvdf1,pvdf2 = parser(Data)
+        #save.
+        ## pvdf1.
+        pvdf1_file = open(folder+"pvdf1.txt", 'w+',encoding='utf8',newline='')
+        Writer = csv.writer(pvdf1_file)
+        Writer.writerows(pvdf1)
+        pvdf1_file.close()
 
-    print(FileNames[1])
-    with open (folder+FileNames[1],"r") as file:
-        Data = list(csv.reader(file,delimiter="\t"))
-    bg_pvdf1,bg_pvdf2 = parser(Data)
+        ## pvdf2.
+        pvdf2_file = open(folder+"pvdf2.txt", 'w+',encoding='utf8',newline='')
+        Writer = csv.writer(pvdf2_file)
+        Writer.writerows(pvdf2)
+        pvdf2_file.close()
 
-    plot_timeDomain(pvdf1,bg_pvdf1,1000)
-    plot_timeDomain(pvdf2,bg_pvdf2,1000)
-    plot_freqDomain(pvdf1,bg_pvdf1,5000,60)
-    plot_freqDomain(pvdf2,bg_pvdf2,5000,60)
+        ## pvdf3.
+        pvdf3_file = open(folder+"pvdf3.txt", 'w+',encoding='utf8',newline='')
+        Writer = csv.writer(pvdf3_file)
+        Writer.writerows(pvdf3)
+        pvdf3_file.close()
+
+
+
+
+
 
 

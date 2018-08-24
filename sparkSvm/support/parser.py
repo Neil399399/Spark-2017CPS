@@ -2,7 +2,7 @@ import os
 import csv
 import numpy as np
 # global
-folder = 'D:/temp/'
+folder = 'D:/temp/temp/'
 
 # parser for vibration.
 def parser(data):
@@ -10,7 +10,7 @@ def parser(data):
     temp_outdoor_temperature = 0.00
     temp_indoor_temperature = 0.00
     vibration=[]
-    #1~1653
+    #1~1652
     for x in range (1,1652):
         vibration.append(float(data[x][1]))
         temp_outdoor_temperature = temp_outdoor_temperature + float(data[x][2])
@@ -26,14 +26,21 @@ def parser(data):
 def feature(List):
     Complex = np.fft.fft(List[0:1650])
     feature = []
+    # WSN header flag.
+    feature.append('54')
     for i in range(0,30):
         temp = (Complex[i].real**2+Complex[i].imag**2)**0.5
         temp = "%.4f" %temp
-        feature.append(float(temp))
+        temp = temp.replace(".","")
+        feature.append(temp)
     temp1 = "%.4f" %List[1651]
     temp2 = "%.4f" %List[1652]
-    feature.append(float(temp1))
-    feature.append(float(temp2))
+    temp1 = temp1.replace(".","")
+    temp2 = temp2.replace(".","")
+    feature.append(temp1)
+    feature.append(temp2)
+    # WSN tail flag.
+    feature.append('66')
     return [feature]
     
 if __name__ == "__main__":
@@ -46,11 +53,15 @@ if __name__ == "__main__":
     for filename in FileNames:
         with open (folder+filename,"r") as file:
             Data = list(csv.reader(file,delimiter="\t"))
-        feature=feature(parser(Data))
+        features=feature(parser(Data))
 
         new_file = open(folder+"temp.txt", 'w+',encoding='utf8',newline='')
         Writer = csv.writer(new_file)
-        Writer.writerows(feature)
+        Writer.writerows(features)
         new_file.close()
-
+        ## wirte with '\n'
+        # for x in features:
+        #     print(x)
+        #     new_file.writelines(x+'\n')
+        # new_file.close()
 
