@@ -41,7 +41,7 @@ solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 
 
 # spark config.
-# SparkContextHandler._master_ip = "10.14.24.101"g
+# SparkContextHandler._master_ip = "10.14.24.91"
 # sc = SparkContextHandler.get_spark_sc()
 conf = SparkConf().setAppName('test').setMaster('local')
 sc = SparkContext(conf=conf)

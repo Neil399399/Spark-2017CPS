@@ -47,13 +47,7 @@ def OutputLayer(InputRDD,Model):
        return 'Rag'
 
 def mutiClassification_function(rdd,method):
-<<<<<<< HEAD
-    print("Start do fft parser ...")
-    Start_time = time.time()
-    output = FFT(rdd)
-=======
     output = FrequencyDomain(rdd)
->>>>>>> 57e50b5d77cb058159953fc6dad3279fa02d0ebf
     testData = sc.parallelize([output])
     # -----------------------Start predict.-------------------------------------#
     logger_server.info('prediction')

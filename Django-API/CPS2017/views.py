@@ -1,15 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-<<<<<<< HEAD
-from CPS2017 import sc
-from CPS2017 import solr_server
-from CPS2017.mllib.mutiClassification import mutiClassification_function
-from CPS2017.mllib.mold import mold_function
-=======
 from CPS2017 import sc,logger_server
 from CPS2017 import solr_server,Cloud_Motor_url,Cloud_WSN_url,Cloud_Predict_url,Om2m_url
 from CPS2017.mllib.mutiClassification import mutiClassification_function,mutiClassification_function_module
->>>>>>> 57e50b5d77cb058159953fc6dad3279fa02d0ebf
 import time
 import json
 import requests
@@ -124,37 +117,6 @@ def environmental_information(request):
         response_message = "request error."
         # logger_server.warning('bad request')
 
-<<<<<<< HEAD
-def mold(request):
-    #----------------------------------------------------------------#
-    if request.method == 'GET':
-       start_time = time.time()
-       try:
-           id = request.GET['ID']
-           method = request.GET['Method']
-           print(id,method)
-           # ----------------------------solr connect-------------------------------------------#
-           solr_result = solr_server.search("id:{}".format(id))
-           for solr_result in solr_result:
-               vibration = format(solr_result['vibration'])
-           input_data= json.loads(vibration)
-           get_data_time = time.time() - start_time
-           # ----------------------------spark connect-------------------------------------------#
-           rdd = sc.parallelize(input_data)
-           response_data = mold_function(rdd,method)
-           response_message = "Success."
-       except:
-            response_message = "calculate error."
-    else:
-        response_message = "Please use GET method."
-
-    Running_time = time.time() - start_time
-    return JsonResponse({
-                         "response_message": response_message,
-                         "response_data": response_data,
-                         "Running time": Running_time,
-                         "Get data from solr time": get_data_time})
-=======
         # send_Om2m(id,'normal')
 
     else:
@@ -162,4 +124,3 @@ def mold(request):
 
     Running_time = time.time() - start_time
     return JsonResponse({})
->>>>>>> 57e50b5d77cb058159953fc6dad3279fa02d0ebf
