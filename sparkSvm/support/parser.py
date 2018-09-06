@@ -1,8 +1,9 @@
 import os
 import csv
 import numpy as np
+from send_moto_data import getList
 # global
-folder = 'D:/temp/temp/'
+folder = 'D:/CPS_Moto_Data/temp/'
 
 # parser for vibration.
 def parser(data):
@@ -41,7 +42,7 @@ def feature(List):
     feature.append(temp2)
     # WSN tail flag.
     feature.append('66')
-    return [feature]
+    return feature
     
 if __name__ == "__main__":
 
@@ -54,11 +55,13 @@ if __name__ == "__main__":
         with open (folder+filename,"r") as file:
             Data = list(csv.reader(file,delimiter="\t"))
         features=feature(parser(Data))
+        #WSN send data from UART.
+        getList(features)
 
-        new_file = open(folder+"temp.txt", 'w+',encoding='utf8',newline='')
-        Writer = csv.writer(new_file)
-        Writer.writerows(features)
-        new_file.close()
+        # new_file = open(folder+"temp.txt", 'w+',encoding='utf8',newline='')
+        # Writer = csv.writer(new_file)
+        # Writer.writerows(features)
+        # new_file.close()
         ## wirte with '\n'
         # for x in features:
         #     print(x)
