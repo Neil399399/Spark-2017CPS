@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # global
-folder = 'D:/temp/'
+folder = 'D:/temp/48/空沖壓/'
+output_folder = 'D:/temp2/'
 
 # parser for vibration.
 def parser(data,label):
@@ -60,33 +61,37 @@ def plot_freqDomain(list_1,list_2,freq_range,x_axis_range):
     
 if __name__ == "__main__":
 
+    # search all file in folder.
     FileNames=[]
     for root,dirs,files in os.walk(folder):
         for filename in files:
             FileNames.append(filename)
+            
+    # create file.
+    ## pvdf1.
+    # pvdf1_file = open(output_folder+"pvdf1_train_SVM_withBG.txt", 'a+',encoding='utf8',newline='')
+    # Writer1 = csv.writer(pvdf1_file)
+    ## pvdf2.
+    pvdf2_file = open(output_folder+"pvdf2_spread_test_SVM.txt", 'a+',encoding='utf8',newline='')
+    Writer2 = csv.writer(pvdf2_file)
+    ## pvdf3.
+    # pvdf3_file = open(output_folder+"pvdf3_train_SVM.txt", 'a+',encoding='utf8',newline='')
+    # Writer3 = csv.writer(pvdf3_file)
+
     for filename in FileNames:
+        print(filename)
         with open (folder+filename,"r") as file:
             Data = list(csv.reader(file,delimiter="\t"))
-        pvdf1,pvdf2,pvdf3 = parser(Data,0)
-    
-        #save.
-        ## pvdf1.
-        pvdf1_file = open(folder+"pvdf1.txt", 'w+',encoding='utf8',newline='')
-        Writer = csv.writer(pvdf1_file)
-        Writer.writerows(pvdf1)
-        pvdf1_file.close()
+        pvdf1,pvdf2,pvdf3 = parser(Data,1)
+        # save.
+        # Writer1.writerows(pvdf1)
+        Writer2.writerows(pvdf2)
+        # Writer3.writerows(pvdf3)
 
-        ## pvdf2.
-        pvdf2_file = open(folder+"pvdf2.txt", 'w+',encoding='utf8',newline='')
-        Writer = csv.writer(pvdf2_file)
-        Writer.writerows(pvdf2)
-        pvdf2_file.close()
-
-        ## pvdf3.
-        pvdf3_file = open(folder+"pvdf3.txt", 'w+',encoding='utf8',newline='')
-        Writer = csv.writer(pvdf3_file)
-        Writer.writerows(pvdf3)
-        pvdf3_file.close()
+    # close file.
+    # pvdf1_file.close()
+    pvdf2_file.close()
+    # pvdf3_file.close()
 
 
 

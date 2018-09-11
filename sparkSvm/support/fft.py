@@ -2,22 +2,25 @@ import os
 import csv
 from math import e
 import numpy as np
+import matplotlib.pyplot as plt
 
 
-
-
-with open ("data/newdata1125/merge.txt","r") as csvfile:
+with open ("D:/temp2/pvdf2_spread_test_SVM.txt","r") as csvfile:
     Data = [list(map(float,rec)) for rec in csv.reader(csvfile,delimiter=",")]
 
-for i in range(0,len(Data)):
     value=[]
-    temp=Data[i][1:]   
-    fft = np.fft.fft(temp)
-    for j in range(0,len(fft)):
-        distanceOfComplex = (fft[j].real**2+fft[j].imag**2)**0.5
-        value.append(distanceOfComplex)
-    print len(value)
+    temp0=Data[1][1:]
+    print(Data[1][0])
+    temp1=Data[15][1:]
+    print(Data[15][0])
+    fft0 = np.fft.fft(temp0)/len(temp0)  
+    fft1 = np.fft.fft(temp1)/len(temp1) 
 
+    amplitude_0 = np.abs(fft0)
+    amplitude_1 = np.abs(fft1)
+    plt.plot(amplitude_0[0:200],label='line0',color='black')
+    plt.plot(amplitude_1[0:200],label='line1',color='orange')
+    plt.show()
 
 
       
