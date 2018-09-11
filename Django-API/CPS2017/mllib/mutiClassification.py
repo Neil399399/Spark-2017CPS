@@ -7,7 +7,7 @@ from CPS2017 import Module_LR_First_Model,Module_LR_Second_Model,Module_LR_Third
 from CPS2017 import Module_SVM_First_Model,Module_SVM_Second_Model,Module_SVM_Third_Model
 from CPS2017 import Random_Forest_Model,Module_Random_Forest_Model
 
-def FrequencyDomain(line):
+def FFT(line):
     import numpy as np
     # change data used fft and calculate distance ----- root(a**2+b**2)
     newValue = []

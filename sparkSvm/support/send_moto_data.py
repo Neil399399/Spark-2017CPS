@@ -11,19 +11,16 @@ ser.open()
 
 def getList(List):
   #computing List
-  ser.flushInput() # empty buffer.
-  ser.write(b'54')
-  ser.write(b'\n')
-  ser.flushInput() # empty buffer.
+  ser.write("54")
+  ser.write("\n")
   #time.sleep(0.5) # wating for WSN to empty array.
-  for i in range(1,34):
+  for i in range(0,34):
     temp = List[i]
-    print(temp)
-    ser.write(temp.encode())
-    ser.write(b'\n')
-    time.sleep(0.01)
-    ser.flushInput() # empty buffer.
+    print temp
+    ser.write(temp)
+    ser.write("\n")
+  ser.flushInput() # empty buffer.
   #time.sleep(0.5)
-  print("UART Done.")
+  print "UART Done."
 
 # done.

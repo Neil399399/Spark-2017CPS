@@ -32,6 +32,7 @@ Module_SVM_Layer2 = "hdfs:///spark/Model/FOA_1SecModel"
 Module_SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
 Module_Random_Forest = "hdfs:///spark/Model/random_forest_Model"
 
+mold_Model = 'hdfs:///spark/Model/mold_Model'
 # solr server.
 solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 # mongodb
@@ -40,7 +41,7 @@ solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 
 
 # spark config.
-# SparkContextHandler._master_ip = "10.14.24.101"g
+# SparkContextHandler._master_ip = "10.14.24.91"
 # sc = SparkContextHandler.get_spark_sc()
 conf = SparkConf().setAppName('test').setMaster('local')
 sc = SparkContext(conf=conf)
