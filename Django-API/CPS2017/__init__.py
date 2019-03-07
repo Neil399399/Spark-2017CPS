@@ -9,11 +9,13 @@ import logging
 
 # basic config.
 CPS_TEST_SOLR_URL = "http://140.124.183.37:8983/solr/2017CPS/"
-Cloud_Motor_url = "http://140.124.184.204:8090/Cloud/Motor/QuerySecond"
-Cloud_Module_url = "http://140.124.184.204:8090/Cloud/Motor/QuerySecond"
+Cloud_Motor_url = "http://140.124.184.204:8090/Cloud/Motor_Fet/QuerySecond"
+Cloud_punch_url = "http://140.124.184.204:8090/Cloud/Motor/QuerySecond"
 Cloud_WSN_url = "http://140.124.184.204:8090/Cloud/WSN/QuerySecond"
 Cloud_Predict_url = "http://140.124.184.204:8090/Cloud/Prediction/Insert"
-Om2m_url = "http://140.124.184.204:8082/~/in-cse/cnt-390684604"
+# Om2m_url = "http://140.124.184.204:8082/~/in-cse/cnt-947016145"
+Om2m_url_Motor = "http://140.124.184.204:8082/~/in-cse/cnt-947016145"
+Om2m_url_Punch = "http://140.124.184.204:8082/~/in-cse/cnt-978995845"
 
 # engine model.
 LR_Layer1 = "hdfs:///spark/Model/logic_Model1"
@@ -22,15 +24,12 @@ LR_Layer3 = "hdfs:///spark/Model/logic_Model3"
 SVM_Layer1 = "hdfs:///spark/Model/SVM_Model1_v4"
 SVM_Layer2 = "hdfs:///spark/Model/SVM_Model2new"
 SVM_Layer3 = "hdfs:///spark/Model/SVM_Model3new"
-Random_Forest = "hdfs:///spark/Model/random_forest_Model"
-# module model.
-Module_LR_Layer1 = "hdfs:///spark/Model/FNAL_1SecModel"
-Module_LR_Layer2 = "hdfs:///spark/Model/FOAL_1SecModel"
-Module_LR_Layer3 = "hdfs:///spark/Model/FTRL_1SecModel"
-Module_SVM_Layer1 = "hdfs:///spark/Model/FNA_1SecModel"
-Module_SVM_Layer2 = "hdfs:///spark/Model/FOA_1SecModel"
-Module_SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
-Module_Random_Forest = "hdfs:///spark/Model/random_forest_Model"
+Random_Forest = "hdfs:///spark/Model/Random_forest_model_30"
+# mold model.
+Mold_SVM_Layer1 = "hdfs:///spark/Model/mold/pvdf2_v4"
+# Mold_SVM_Layer2 = "hdfs:///spark/Model/FOA_1SecModel"
+# Mold_SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
+Mold_Random_Forest = "hdfs:///spark/Model/mold/random_forest"
 
 # solr server.
 solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
@@ -40,7 +39,7 @@ solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 
 
 # spark config.
-# SparkContextHandler._master_ip = "10.14.24.101"g
+# SparkContextHandler._master_ip = "10.14.24.101"
 # sc = SparkContextHandler.get_spark_sc()
 conf = SparkConf().setAppName('test').setMaster('local')
 sc = SparkContext(conf=conf)
@@ -73,18 +72,18 @@ LR_First_Model = LogisticRegressionModel.load(sc, LR_Layer1)
 LR_Second_Model = LogisticRegressionModel.load(sc, LR_Layer2)
 LR_Third_Model = LogisticRegressionModel.load(sc, LR_Layer3)
 
-Module_LR_First_Model= LogisticRegressionModel.load(sc, Module_LR_Layer1)
-Module_LR_Second_Model = LogisticRegressionModel.load(sc, Module_LR_Layer2)
-Module_LR_Third_Model = LogisticRegressionModel.load(sc, Module_LR_Layer3)
+# Mold_LR_First_Model= LogisticRegressionModel.load(sc, Mold_LR_Layer1)
+# Mold_LR_Second_Model = LogisticRegressionModel.load(sc, Mold_LR_Layer2)
+# Mold_LR_Third_Model = LogisticRegressionModel.load(sc, Mold_LR_Layer3)
 ## SVMModel
 SVM_First_Model = SVMModel.load(sc, SVM_Layer1)
 SVM_Second_Model = SVMModel.load(sc, SVM_Layer2)
 SVM_Third_Model = SVMModel.load(sc, SVM_Layer3)
 
-Module_SVM_First_Model = SVMModel.load(sc, Module_SVM_Layer1)
-Module_SVM_Second_Model = SVMModel.load(sc, Module_SVM_Layer2)
-Module_SVM_Third_Model = SVMModel.load(sc, Module_SVM_Layer3)
+Mold_SVM_First_Model = SVMModel.load(sc, Mold_SVM_Layer1)
+# Mold_SVM_Second_Model = SVMModel.load(sc, Mold_SVM_Layer2)
+# Mold_SVM_Third_Model = SVMModel.load(sc, Mold_SVM_Layer3)
 
 ## Random forset
 Random_Forest_Model = RandomForestModel.load(sc,Random_Forest)
-Module_Random_Forest_Model = RandomForestModel.load(sc,Random_Forest)
+Mold_Random_Forest_Model = RandomForestModel.load(sc,Mold_Random_Forest)
