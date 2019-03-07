@@ -91,4 +91,3 @@ def mutiClassification_punch(request):
     else:
         response_message = "Please use GET method."
     return Response(id,response_data,response_message)
-

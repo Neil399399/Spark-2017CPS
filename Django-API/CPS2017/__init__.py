@@ -31,6 +31,7 @@ Mold_SVM_Layer1 = "hdfs:///spark/Model/mold/pvdf2_v4"
 # Mold_SVM_Layer3 = "hdfs:///spark/Model/FTR_1SecModel"
 Mold_Random_Forest = "hdfs:///spark/Model/mold/random_forest"
 
+mold_Model = 'hdfs:///spark/Model/mold_Model'
 # solr server.
 solr_server = pysolr.Solr(CPS_TEST_SOLR_URL, timeout=10)
 # mongodb
