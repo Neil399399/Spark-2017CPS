@@ -66,28 +66,20 @@ def FrequencyDomain(line):
        values = [float(x) for x in line.split(",")]
     #change data used fft and calculate distance ----- root(a**2+b**2)
      newValue = [values[0]]
-     complex = np.fft.fft(values[1:1651])
-     for i in range(0,30):
-        distanceOfComplex = (complex[i].real**2+complex[i].imag**2)**0.5
-        distanceOfComplex = "%.4f" %distanceOfComplex
-        newValue.append(float(distanceOfComplex))
-     newValue.append(values[1652])
-     newValue.append(values[1653])
-     return LabeledPoint(newValue[0],newValue[1:])
+     complex = np.fft.fft(values[1:])
+     amplitude = np.abs(complex)
+     # newValue.append(values[1652])
+     # newValue.append(values[1653])
+     return LabeledPoint(newValue[0],amplitude[0:60])
 
-def MoldParser(line):
+def Mold_FrequencyDomain(line):
     try:
         values = [float(x) for x in line.split("\t")]
     except:
         values = [float(x) for x in line.split(",")]
-    newValue = [values[0]]
-    complex = np.fft.fft(values[1:])
-
-    for i in range(0, len(complex)):
-        distanceOfComplex = (complex[i].real ** 2 + complex[i].imag ** 2) ** 0.5
-        newValue.append(distanceOfComplex)
-
-    return LabeledPoint(newValue[0], newValue[1:])
+    # complex = np.fft.fft(values[1:])/len(values[1:])
+    # amplitude = np.abs(complex)
+    return LabeledPoint(values[0], values[1:])
 
 
 def Train_Model(trainingRDD, method, parameter_Iterations, parameter_stepSize, parameter_reqParam):
@@ -100,8 +92,8 @@ def Train_Model(trainingRDD, method, parameter_Iterations, parameter_stepSize, p
         return SVM_Model
     elif method == 'random_foreset':
         from pyspark.mllib.tree import RandomForest, RandomForestModel
-        RandomForest_Model = RandomForest.trainClassifier(trainingRDD,numClasses=4, categoricalFeaturesInfo={},
-                                     numTrees=4, featureSubsetStrategy="auto",
+        RandomForest_Model = RandomForest.trainClassifier(trainingRDD,numClasses=3, categoricalFeaturesInfo={},
+                                     numTrees=6, featureSubsetStrategy="auto",
                                      impurity='gini', maxDepth=20, maxBins=32)
         return RandomForest_Model
 
@@ -114,7 +106,7 @@ def Test_Model(testingRDD, Model):
     tempPrecision = 0
     tempRecall = 0
 
-    for x in range(0,1):
+    for x in range(0,5):
         print("start testing!!" + str(x))
         labelsAndPreds = testingRDD.map(lambda p: (p.label,Model.predict(p.features)))
         trainErr = labelsAndPreds.filter(lambda p: p[0] !=p[1]).count()/float(testingRDD.count())
@@ -132,7 +124,7 @@ def Test_Model(testingRDD, Model):
         tempacc = tempacc+accuracy
         tempPrecision = tempPrecision+Precision
         tempRecall = tempRecall+Recall
-    return [temptrainErr,tempacc,tempPrecision,tempRecall]
+    return [temptrainErr/5,tempacc/5,tempPrecision/5,tempRecall/5]
 
 
 def Test_Model2(testingRDD,Model):
@@ -161,6 +153,10 @@ def Test_Model2(testingRDD,Model):
     accuracy = 0
     trainErr = 0
     total_amount = len(testingRDD.collect())
+    class0_amount = 0
+    class1_amount = 0
+    class2_amount = 0
+
     for test_data in testingRDD.collect():
         predict = Model.predict(test_data.features)
         label = test_data.label
@@ -172,8 +168,8 @@ def Test_Model2(testingRDD,Model):
             class_0_false1+=1
         elif (label == 0  and predict == 2):
             class_0_false2+=1
-        elif (label == 0  and predict == 3):
-            class_0_false3+=1
+        # elif (label == 0  and predict == 3):
+        #     class_0_false3+=1
 
         ## class1
         if (label == 1 and predict == 0):
@@ -182,8 +178,8 @@ def Test_Model2(testingRDD,Model):
             class_1_true+=1
         elif (label == 1  and predict == 2):
             class_1_false2+=1
-        elif (label == 1  and predict == 3):
-            class_1_false3+=1
+        # elif (label == 1  and predict == 3):
+        #     class_1_false3+=1
 
         ## class2
         if (label == 2 and predict == 0):
@@ -192,71 +188,79 @@ def Test_Model2(testingRDD,Model):
             class_2_false1+=1
         elif (label == 2  and predict == 2):
             class_2_true+=1
-        elif (label == 2  and predict == 3):
-            class_2_false3+=1
+        # elif (label == 2  and predict == 3):
+        #     class_2_false3+=1
 
         ## class3
-        if (label == 3 and predict == 0):
-            class_3_false0+=1
-        elif (label == 3  and predict == 1):
-            class_3_false1+=1
-        elif (label == 3  and predict == 2):
-            class_3_false2+=1
-        elif (label == 3  and predict == 3):
-            class_3_true+=1
+        # if (label == 3 and predict == 0):
+        #     class_3_false0+=1
+        # elif (label == 3  and predict == 1):
+        #     class_3_false1+=1
+        # elif (label == 3  and predict == 2):
+        #     class_3_false2+=1
+        # elif (label == 3  and predict == 3):
+        #     class_3_true+=1
+
+        if label == 0:
+            class0_amount+=1
+        elif label == 1:
+            class1_amount+=1
+        elif label ==2:
+            class2_amount+=1
 
 
 
+    # class3_amount = len(testingRDD.filter(lambda p: p.label == 3).collect())
 
-    class0_amount = len(testingRDD.filter(lambda p: p.label == 0).collect())
-    class1_amount = len(testingRDD.filter(lambda p: p.label == 1).collect())
-    class2_amount = len(testingRDD.filter(lambda p: p.label == 2).collect())
-    class3_amount = len(testingRDD.filter(lambda p: p.label == 3).collect())
+    class0 = [class_0_true,class_0_false1,class_0_false2,class0_amount]
+    class1 = [class_1_false0,class_1_true,class_1_false2,class1_amount]
+    class2 = [class_2_false0,class_2_false1,class_2_true,class2_amount]
+    # class0 = [class_0_true,class_0_false1,class_0_false2,class_0_false3,class0_amount]
+    # class1 = [class_1_false0,class_1_true,class_1_false2,class_1_false3,class1_amount]
+    # class2 = [class_2_false0,class_2_false1,class_2_true,class_2_false3,class2_amount]
+    # class3 = [class_3_false0,class_3_false1,class_3_false2,class_3_true,class3_amount]
 
-    class0 = [class_0_true,class_0_false1,class_0_false2,class_0_false3,class0_amount]
-    class1 = [class_1_false0,class_1_true,class_1_false2,class_1_false3,class1_amount]
-    class2 = [class_2_false0,class_2_false1,class_2_true,class_2_false3,class2_amount]
-    class3 = [class_3_false0,class_3_false1,class_3_false2,class_3_true,class3_amount]
+    # return [class0,class1,class2,class3]
+    return [class0,class1,class2]
 
-    return [class0,class1,class2,class3]
 
 
 
 
 # Input.
 startTime = time()
-data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/random_forest/Random_forest_Train.txt")
-test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/random_forest/Random_forest_Test.txt")
-trainData = data.map(FrequencyDomain)
-testData = test.map(FrequencyDomain)
+data = sc.textFile("file:/home/spark/Documents/neil-git/dataset/mold/pvdf2_spread_train_SVM.txt")
+test = sc.textFile("file:/home/spark/Documents/neil-git/dataset/mold/pvdf2_spread_test_SVM.txt")
+trainData = data.map(Mold_FrequencyDomain)
+testData = test.map(Mold_FrequencyDomain)
 
 # for random forest.
 print("start training!!")
-model = Train_Model(trainData,'random_foreset',None,None,None)
-# model = Train_Model(trainData,'SVM',500,1,0.01)
+# model = Train_Model(trainData,'random_foreset',None,None,None)
+model = Train_Model(trainData,'SVM',100,1,0.001)
 # Logistic
-result = Test_Model2(testData,model)
+result = Test_Model(testData,model)
 runTime = time()-startTime
 #
 #
-#-------------print result --------------------#
-# print("Result:\n"
-#         + "Time:" + str(runTime) + "\n"
-#         + "Training Error = " + str(result[0])+"\n"
-#         + "Accuracy = " + str(result[1])+"\n"
-#         + "Precision = "+str(result[2])+"\n"
-#         + "Recall = "+str(result[3])+"\n"
-#         + "F-Measure = "+str(2*(result[2])*(result[3])/(result[2]+result[3])))
+# -------------print result --------------------#
+print("Result:\n"
+        + "Time:" + str(runTime) + "\n"
+        + "Training Error = " + str(result[0])+"\n"
+        + "Accuracy = " + str(result[1])+"\n"
+        + "Precision = "+str(result[2])+"\n"
+        + "Recall = "+str(result[3])+"\n"
+        + "F-Measure = "+str(2*(result[2])*(result[3])/(result[2]+result[3])))
 
-print('Reault:\n')
-i =0
-for res in result:
-    print('Class:',i)
-    print('result',res)
-    print('#############################################')
-    i+=1
+# print('Reault:\n')
+# i =0
+# for res in result:
+#     print('Class:',i)
+#     print('result',res)
+#     print('#############################################')
+#     i+=1
 
 
 #Save and load model
-model.save(sc,"hdfs:///spark/Model/Random_forest_model_30")
+model.save(sc,"hdfs:///spark/Model/mold/pvdf2_v4")
 #
